@@ -1,0 +1,158 @@
+{
+  "dataset_path": "C:\\Smart_parking_system_WEbAPP\\datasets\\eval_ready.csv",
+  "total_samples": 973,
+  "valid_plates": 926,
+  "invalid_skipped": 47,
+  "unique_states": 35,
+  "unique_series_patterns": 583,
+  "bigram_coverage": 35,
+  "length_distribution": {
+    "7": 0.0054,
+    "8": 0.054,
+    "9": 0.3175,
+    "10": 0.621,
+    "11": 0.0022
+  },
+  "state_breakdown": {
+    "AN": {
+      "plate_count": 6,
+      "districts": 1
+    },
+    "AP": {
+      "plate_count": 37,
+      "districts": 13
+    },
+    "AR": {
+      "plate_count": 12,
+      "districts": 8
+    },
+    "AS": {
+      "plate_count": 24,
+      "districts": 8
+    },
+    "BR": {
+      "plate_count": 15,
+      "districts": 8
+    },
+    "CG": {
+      "plate_count": 20,
+      "districts": 10
+    },
+    "CH": {
+      "plate_count": 10,
+      "districts": 2
+    },
+    "DL": {
+      "plate_count": 46,
+      "districts": 15
+    },
+    "DN": {
+      "plate_count": 6,
+      "districts": 1
+    },
+    "GA": {
+      "plate_count": 13,
+      "districts": 7
+    },
+    "GJ": {
+      "plate_count": 38,
+      "districts": 15
+    },
+    "HP": {
+      "plate_count": 21,
+      "districts": 18
+    },
+    "HR": {
+      "plate_count": 55,
+      "districts": 12
+    },
+    "JH": {
+      "plate_count": 18,
+      "districts": 7
+    },
+    "JK": {
+      "plate_count": 32,
+      "districts": 10
+    },
+    "KA": {
+      "plate_count": 37,
+      "districts": 15
+    },
+    "KL": {
+      "plate_count": 46,
+      "districts": 20
+    },
+    "LA": {
+      "plate_count": 1,
+      "districts": 1
+    },
+    "MH": {
+      "plate_count": 205,
+      "districts": 19
+    },
+    "ML": {
+      "plate_count": 32,
+      "districts": 7
+    },
+    "MN": {
+      "plate_count": 5,
+      "districts": 3
+    },
+    "MP": {
+      "plate_count": 13,
+      "districts": 7
+    },
+    "MZ": {
+      "plate_count": 1,
+      "districts": 1
+    },
+    "NL": {
+      "plate_count": 8,
+      "districts": 3
+    },
+    "OD": {
+      "plate_count": 16,
+      "districts": 8
+    },
+    "PB": {
+      "plate_count": 28,
+      "districts": 15
+    },
+    "PY": {
+      "plate_count": 18,
+      "districts": 4
+    },
+    "RJ": {
+      "plate_count": 10,
+      "districts": 5
+    },
+    "SK": {
+      "plate_count": 13,
+      "districts": 4
+    },
+    "TN": {
+      "plate_count": 46,
+      "districts": 20
+    },
+    "TR": {
+      "plate_count": 10,
+      "districts": 5
+    },
+    "TS": {
+      "plate_count": 18,
+      "districts": 9
+    },
+    "UK": {
+      "plate_count": 9,
+      "districts": 5
+    },
+    "UP": {
+      "plate_count": 31,
+      "districts": 16
+    },
+    "WB": {
+      "plate_count": 26,
+      "districts": 11
+    }
+  }
+}

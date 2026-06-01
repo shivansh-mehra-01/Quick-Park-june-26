@@ -1,0 +1,93 @@
+{
+  "state": {
+    "0": {
+      "correct": "O",
+      "confidence": 0.95,
+      "count": 50
+    },
+    "1": {
+      "correct": "I",
+      "confidence": 0.9,
+      "count": 40
+    },
+    "5": {
+      "correct": "S",
+      "confidence": 0.85,
+      "count": 35
+    },
+    "6": {
+      "correct": "G",
+      "confidence": 0.8,
+      "count": 30
+    },
+    "8": {
+      "correct": "B",
+      "confidence": 0.75,
+      "count": 25
+    }
+  },
+  "digit": {
+    "O": {
+      "correct": "0",
+      "confidence": 0.95,
+      "count": 60
+    },
+    "Q": {
+      "correct": "0",
+      "confidence": 0.9,
+      "count": 40
+    },
+    "I": {
+      "correct": "1",
+      "confidence": 0.9,
+      "count": 45
+    },
+    "L": {
+      "correct": "1",
+      "confidence": 0.75,
+      "count": 30
+    },
+    "Z": {
+      "correct": "2",
+      "confidence": 0.8,
+      "count": 35
+    },
+    "S": {
+      "correct": "5",
+      "confidence": 0.75,
+      "count": 28
+    },
+    "G": {
+      "correct": "6",
+      "confidence": 0.75,
+      "count": 25
+    },
+    "B": {
+      "correct": "8",
+      "confidence": 0.7,
+      "count": 20
+    },
+    "D": {
+      "correct": "0",
+      "confidence": 0.65,
+      "count": 15
+    }
+  },
+  "alpha": {
+    "0": {
+      "correct": "O",
+      "confidence": 0.85,
+      "count": 40
+    },
+    "1": {
+      "correct": "I",
+      "confidence": 0.8,
+      "count": 30
+    },
+    "5": {
+      "correct": "S",
+      "confidence": 0.75,
+      "count": 25
+    }
+  }
+}
