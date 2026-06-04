@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import ParkingMap from "../../components/ParkingMap";
 import { fetchNearbyParkingApi } from "../../services/parkingService";
 import { useRouter } from "expo-router";
+import { useTheme } from "../../context/ThemeContext";
 
 const { width, height } = Dimensions.get("window");
 const statusBarHeight = StatusBar.currentHeight || (Platform.OS === "ios" ? 44 : 20);
@@ -14,6 +15,7 @@ export default function MapTab() {
   const [parkings, setParkings] = useState<any[]>([]);
   const [selectedParking, setSelectedParking] = useState<any>(null);
   const router = useRouter();
+  const { colors, theme } = useTheme();
 
   useEffect(() => {
     async function init() {
@@ -45,47 +47,47 @@ export default function MapTab() {
       
       {/* Notch-Aware Floating Search Bar */}
       <View style={[styles.searchOverlay, { top: statusBarHeight + 10 }]}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search" size={20} color="#94a3b8" />
-          <Text style={styles.searchText}>Search for parking...</Text>
+        <View style={[styles.searchBar, { backgroundColor: theme === 'dark' ? 'rgba(30,41,59,0.95)' : 'rgba(255,255,255,0.95)', borderColor: colors.border }]}>
+          <Ionicons name="search" size={20} color={colors.textSecondary} />
+          <Text style={[styles.searchText, { color: colors.textSecondary }]}>Search for parking...</Text>
         </View>
       </View>
 
       {/* Adjusted Map Controls */}
       <View style={[styles.controls, { top: statusBarHeight + 80 }]}>
-        <TouchableOpacity style={styles.controlBtn}>
-          <Ionicons name="locate" size={24} color="#3b82f6" />
+        <TouchableOpacity style={[styles.controlBtn, { backgroundColor: colors.card }]}>
+          <Ionicons name="locate" size={24} color={colors.primary} />
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.controlBtn, { marginTop: 12 }]}>
-          <Ionicons name="layers" size={24} color="#3b82f6" />
+        <TouchableOpacity style={[styles.controlBtn, { marginTop: 12, backgroundColor: colors.card }]}>
+          <Ionicons name="layers" size={24} color={colors.primary} />
         </TouchableOpacity>
       </View>
 
       {/* Slim & Modern Selected Parking Card */}
       {selectedParking && (
         <TouchableOpacity 
-          style={styles.slimCard}
+          style={[styles.slimCard, { backgroundColor: colors.card }]}
           onPress={() => router.push(`/parking/${selectedParking.id}`)}
         >
           <Image source={{ uri: selectedParking.image }} style={styles.slimImage} />
           <View style={styles.slimInfo}>
             <View style={styles.cardHeader}>
-              <Text style={styles.slimName} numberOfLines={1}>{selectedParking.name}</Text>
-              <View style={styles.ratingBadge}>
-                <Ionicons name="star" size={12} color="#fbbf24" />
-                <Text style={styles.ratingText}>{selectedParking.rating}</Text>
+              <Text style={[styles.slimName, { color: colors.text }]} numberOfLines={1}>{selectedParking.name}</Text>
+              <View style={[styles.ratingBadge, { backgroundColor: colors.warning + "20" }]}>
+                <Ionicons name="star" size={12} color={colors.warning} />
+                <Text style={[styles.ratingText, { color: colors.warning }]}>{selectedParking.rating}</Text>
               </View>
             </View>
             <View style={styles.slimFooter}>
-              <Text style={styles.slimPrice}>{selectedParking.price}</Text>
+              <Text style={[styles.slimPrice, { color: colors.primary }]}>{selectedParking.price}</Text>
               <View style={styles.availability}>
-                <View style={styles.dot} />
-                <Text style={styles.availabilityText}>{selectedParking.availableSlots} available</Text>
+                <View style={[styles.dot, { backgroundColor: colors.success }]} />
+                <Text style={[styles.availabilityText, { color: colors.textSecondary }]}>{selectedParking.availableSlots} available</Text>
               </View>
             </View>
           </View>
           <View style={styles.arrowIcon}>
-            <Ionicons name="chevron-forward" size={24} color="#cbd5e1" />
+            <Ionicons name="chevron-forward" size={24} color={colors.textSecondary} />
           </View>
         </TouchableOpacity>
       )}
@@ -104,7 +106,6 @@ const styles = StyleSheet.create({
     zIndex: 100
   },
   searchBar: {
-    backgroundColor: "rgba(255,255,255,0.98)",
     height: 52,
     borderRadius: 26,
     flexDirection: "row",
@@ -115,16 +116,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 10,
     borderWidth: 1,
-    borderColor: "#f1f5f9"
   },
-  searchText: { marginLeft: 10, color: "#94a3b8", fontSize: 15 },
+  searchText: { marginLeft: 10, fontSize: 15 },
   controls: {
     position: "absolute",
     right: 20,
     zIndex: 100
   },
   controlBtn: {
-    backgroundColor: "white",
     width: 44,
     height: 44,
     borderRadius: 12,
@@ -140,7 +139,6 @@ const styles = StyleSheet.create({
     bottom: 110,
     left: 15,
     right: 15,
-    backgroundColor: "white",
     borderRadius: 20,
     padding: 12,
     flexDirection: "row",
@@ -154,13 +152,13 @@ const styles = StyleSheet.create({
   slimImage: { width: 60, height: 60, borderRadius: 12 },
   slimInfo: { flex: 1, marginLeft: 12, marginRight: 8 },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  slimName: { fontSize: 16, fontWeight: "bold", color: "#1e293b", flex: 1 },
-  ratingBadge: { flexDirection: "row", alignItems: "center", gap: 4 },
-  ratingText: { fontSize: 12, fontWeight: "bold", color: "#d97706" },
+  slimName: { fontSize: 16, fontWeight: "bold", flex: 1 },
+  ratingBadge: { flexDirection: "row", alignItems: "center", gap: 4, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 },
+  ratingText: { fontSize: 12, fontWeight: "bold" },
   slimFooter: { flexDirection: "row", justifyContent: "space-between", marginTop: 6, alignItems: "center" },
-  slimPrice: { fontSize: 14, color: "#3b82f6", fontWeight: "bold" },
+  slimPrice: { fontSize: 14, fontWeight: "bold" },
   availability: { flexDirection: "row", alignItems: "center", gap: 6 },
-  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#16a34a" },
-  availabilityText: { fontSize: 12, color: "#64748b", fontWeight: "600" },
+  dot: { width: 6, height: 6, borderRadius: 3 },
+  availabilityText: { fontSize: 12, fontWeight: "600" },
   arrowIcon: { paddingLeft: 4 }
 });

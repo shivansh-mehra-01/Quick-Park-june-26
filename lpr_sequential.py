@@ -851,7 +851,7 @@ def update_vote_buffer(vote_buffers, session_key, text, conf, source, now):
 
 TARGET_PARKING_NAME = "Aashima Mall Parking"
 # BASE_URL = "https://smart-parking-usm7.onrender.com/api"
-BASE_URL = "https://sixth-sam-project.onrender.com"
+BASE_URL = "http://localhost:5000"
 
 
 def init_db(base_url=BASE_URL, target_parking_name=TARGET_PARKING_NAME):

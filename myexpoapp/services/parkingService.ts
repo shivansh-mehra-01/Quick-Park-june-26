@@ -9,8 +9,8 @@ export async function fetchNearbyParkingApi(lat: number, lon: number): Promise<a
     if (Array.isArray(data) && data.length > 0) {
       return data.map((p: any) => ({
         id: p._id || p.id,
-        lat: p.location?.coordinates?.[1] || p.lat || 23.1930, 
-        lon: p.location?.coordinates?.[0] || p.lon || 77.4420,
+        lat: p.location?.coordinates?.[1] || p.latitude || p.lat || 23.1930, 
+        lon: p.location?.coordinates?.[0] || p.longitude || p.lon || 77.4420,
         name: p.name || "Smart Parking",
         availableSlots: p.available_slots ?? p.availableSlots ?? 0,
         totalSlots: p.total_capacity ?? p.totalSlots ?? 100,

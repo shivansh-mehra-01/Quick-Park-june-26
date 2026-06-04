@@ -5,17 +5,21 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { fetchUserHistoryApi, fetchProfileApi, updateProfileApi } from "../../services/parkingService";
+import { fetchUserHistoryApi } from "../../services/parkingService";
+import { authService } from "../../services/authService";
+import { useTheme } from "../../context/ThemeContext";
 
 const statusBarHeight = StatusBar.currentHeight || (Platform.OS === "ios" ? 44 : 20);
 
 export default function ProfileTab() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [history, setHistory] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   
+  const [userId, setUserId] = React.useState("");
   const [userName, setUserName] = React.useState("");
-  const [userEmail, setUserEmail] = React.useState("abhishek@smartparking.com");
+  const [userEmail, setUserEmail] = React.useState("");
   const [wallet, setWallet] = React.useState(0);
   const [isEditModalVisible, setEditModalVisible] = React.useState(false);
   const [tempName, setTempName] = React.useState("");
@@ -24,13 +28,17 @@ export default function ProfileTab() {
   React.useEffect(() => {
     async function loadProfile() {
       try {
-        const [historyData, profileData] = await Promise.all([
+        const [historyData, currentUser] = await Promise.all([
           fetchUserHistoryApi(),
-          fetchProfileApi(userEmail)
+          authService.getCurrentUser()
         ]);
         setHistory(historyData);
-        setUserName(profileData.full_name || "New User");
-        setWallet(profileData.wallet_balance || 0);
+        if (currentUser) {
+          setUserId(currentUser.id);
+          setUserName(currentUser.name || "New User");
+          setUserEmail(currentUser.email || "");
+          setWallet(currentUser.wallet_balance || 0);
+        }
       } catch (error) {
         console.log("Profile load error:", error);
       } finally {
@@ -41,11 +49,20 @@ export default function ProfileTab() {
   }, []);
 
   const handleSaveProfile = async () => {
-    const success = await updateProfileApi({ email: tempEmail, full_name: tempName });
-    if (success) {
-      setUserName(tempName);
-      setUserEmail(tempEmail);
+    if (!tempName.trim() || !tempEmail.trim()) {
+      Alert.alert("Validation Error", "Name and Email cannot be empty.");
+      return;
+    }
+
+    try {
+      if (userId) {
+        await authService.updateProfile(userId, { name: tempName.trim(), email: tempEmail.trim().toLowerCase() });
+      }
+      setUserName(tempName.trim());
+      setUserEmail(tempEmail.trim().toLowerCase());
       setEditModalVisible(false);
+    } catch (error: any) {
+      Alert.alert("Error", error.message || "Failed to update profile.");
     }
   };
 
@@ -55,22 +72,22 @@ export default function ProfileTab() {
   }, 0);
 
   const menuItems = [
-    { icon: "time-outline", label: "Parking History", route: "/history", color: "#3b82f6" },
-    { icon: "car-outline", label: "My Vehicles", route: "/vehicles", color: "#16a34a" },
-    { icon: "wallet-outline", label: "Payments & Wallet", route: "/wallet", color: "#d97706" },
-    { icon: "settings-outline", label: "Settings", route: "/settings", color: "#64748b" },
+    { icon: "time-outline", label: "Parking History", route: "/history", color: colors.primary },
+    { icon: "car-outline", label: "My Vehicles", route: "/vehicles", color: colors.success },
+    { icon: "wallet-outline", label: "Payments & Wallet", route: "/wallet", color: colors.warning },
+    { icon: "settings-outline", label: "Settings", route: "/settings", color: colors.textSecondary },
   ];
 
   if (loading) {
     return (
-      <View style={styles.loading}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+      <View style={[styles.loading, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView 
         contentContainerStyle={[styles.content, { paddingTop: Platform.OS === "android" ? statusBarHeight + 20 : 20 }]} 
         showsVerticalScrollIndicator={false}
@@ -80,10 +97,10 @@ export default function ProfileTab() {
           <View style={styles.avatarContainer}>
             <Image 
               source={{ uri: `https://ui-avatars.com/api/?name=${userName}&background=3b82f6&color=fff&size=128` }} 
-              style={styles.avatar} 
+              style={[styles.avatar, { borderColor: colors.card }]} 
             />
             <TouchableOpacity 
-              style={styles.editBtn}
+              style={[styles.editBtn, { backgroundColor: colors.primary, borderColor: colors.background }]}
               onPress={() => {
                 setTempName(userName);
                 setTempEmail(userEmail);
@@ -94,31 +111,31 @@ export default function ProfileTab() {
             </TouchableOpacity>
           </View>
           <TouchableOpacity onPress={() => setEditModalVisible(true)}>
-            <Text style={styles.userName}>{userName} <Ionicons name="chevron-forward" size={16} color="#cbd5e1" /></Text>
+            <Text style={[styles.userName, { color: colors.text }]}>{userName} <Ionicons name="chevron-forward" size={16} color={colors.textSecondary} /></Text>
           </TouchableOpacity>
-          <Text style={styles.userEmail}>{userEmail}</Text>
+          <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{userEmail}</Text>
         </View>
 
         {/* Dynamic Stats Row */}
-        <View style={styles.statsRow}>
+        <View style={[styles.statsRow, { backgroundColor: colors.card }]}>
           <View style={styles.statBox}>
-            <Text style={styles.statNumber}>{history.length}</Text>
-            <Text style={styles.statLabel}>Sessions</Text>
+            <Text style={[styles.statNumber, { color: colors.text }]}>{history.length}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Sessions</Text>
           </View>
-          <View style={styles.statDivider} />
+          <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
           <View style={styles.statBox}>
-            <Text style={styles.statNumber}>₹{wallet}</Text>
-            <Text style={styles.statLabel}>Wallet</Text>
+            <Text style={[styles.statNumber, { color: colors.text }]}>₹{wallet}</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Wallet</Text>
           </View>
-          <View style={styles.statDivider} />
+          <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
           <View style={styles.statBox}>
-            <Text style={styles.statNumber}>4.9</Text>
-            <Text style={styles.statLabel}>Rating</Text>
+            <Text style={[styles.statNumber, { color: colors.text }]}>4.9</Text>
+            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Rating</Text>
           </View>
         </View>
 
         {/* Menu Items */}
-        <View style={styles.menuContainer}>
+        <View style={[styles.menuContainer, { backgroundColor: colors.card }]}>
           {menuItems.map((item, index) => (
             <TouchableOpacity 
               key={index} 
@@ -129,28 +146,35 @@ export default function ProfileTab() {
                 <View style={[styles.iconContainer, { backgroundColor: item.color + "15" }]}>
                   <Ionicons name={item.icon as any} size={22} color={item.color} />
                 </View>
-                <Text style={styles.menuLabel}>{item.label}</Text>
+                <Text style={[styles.menuLabel, { color: colors.text }]}>{item.label}</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color="#cbd5e1" />
+              <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           ))}
         </View>
 
         <TouchableOpacity 
-          style={styles.logoutBtn}
+          style={[styles.logoutBtn, { backgroundColor: colors.danger + "10" }]}
           onPress={() => {
             Alert.alert(
               "Log Out",
               "Are you sure you want to log out?",
               [
                 { text: "Cancel", style: "cancel" },
-                { text: "Log Out", style: "destructive", onPress: () => router.replace("/") }
+                { 
+                  text: "Log Out", 
+                  style: "destructive", 
+                  onPress: async () => {
+                    await authService.logout();
+                    router.replace("/login");
+                  } 
+                }
               ]
             );
           }}
         >
-          <Ionicons name="log-out-outline" size={20} color="#ef4444" />
-          <Text style={styles.logoutText}>Log Out</Text>
+          <Ionicons name="log-out-outline" size={20} color={colors.danger} />
+          <Text style={[styles.logoutText, { color: colors.danger }]}>Log Out</Text>
         </TouchableOpacity>
         
         <View style={{ height: 120 }} />
@@ -167,36 +191,38 @@ export default function ProfileTab() {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.modalOverlay}
         >
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit Profile</Text>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Edit Profile</Text>
               <TouchableOpacity onPress={() => setEditModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#64748b" />
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.inputLabel}>Full Name</Text>
+              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Full Name</Text>
               <TextInput 
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
                 value={tempName}
                 onChangeText={setTempName}
                 placeholder="Enter your name"
+                placeholderTextColor={colors.textSecondary}
               />
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.inputLabel}>Email Address</Text>
+              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Email Address</Text>
               <TextInput 
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
                 value={tempEmail}
                 onChangeText={setTempEmail}
                 placeholder="Enter your email"
                 keyboardType="email-address"
+                placeholderTextColor={colors.textSecondary}
               />
             </View>
 
-            <TouchableOpacity style={styles.saveBtn} onPress={handleSaveProfile}>
+            <TouchableOpacity style={[styles.saveBtn, { backgroundColor: colors.primary }]} onPress={handleSaveProfile}>
               <Text style={styles.saveBtnText}>Save Changes</Text>
             </TouchableOpacity>
           </View>
@@ -208,26 +234,23 @@ export default function ProfileTab() {
 
 const styles = StyleSheet.create({
   loading: { flex: 1, justifyContent: "center", alignItems: "center" },
-  container: { flex: 1, backgroundColor: "#f8fafc" },
+  container: { flex: 1 },
   content: { padding: 24 },
   profileHeader: { alignItems: "center", marginBottom: 32 },
   avatarContainer: { position: "relative", marginBottom: 16 },
-  avatar: { width: 110, height: 110, borderRadius: 55, borderWidth: 4, borderColor: "white" },
+  avatar: { width: 110, height: 110, borderRadius: 55, borderWidth: 4 },
   editBtn: {
     position: "absolute",
     bottom: 0,
     right: 0,
-    backgroundColor: "#3b82f6",
     padding: 10,
     borderRadius: 20,
     borderWidth: 3,
-    borderColor: "#f8fafc"
   },
-  userName: { fontSize: 24, fontWeight: "bold", color: "#1e293b" },
-  userEmail: { fontSize: 14, color: "#64748b", marginTop: 4 },
+  userName: { fontSize: 24, fontWeight: "bold" },
+  userEmail: { fontSize: 14, marginTop: 4 },
   statsRow: {
     flexDirection: "row",
-    backgroundColor: "white",
     borderRadius: 24,
     padding: 24,
     marginBottom: 32,
@@ -237,10 +260,10 @@ const styles = StyleSheet.create({
     shadowRadius: 15,
   },
   statBox: { flex: 1, alignItems: "center" },
-  statNumber: { fontSize: 20, fontWeight: "bold", color: "#1e293b" },
-  statLabel: { fontSize: 12, color: "#64748b", marginTop: 4, fontWeight: "600" },
-  statDivider: { width: 1, height: "100%", backgroundColor: "#f1f5f9" },
-  menuContainer: { backgroundColor: "white", borderRadius: 24, padding: 8, elevation: 2, shadowColor: "#000", shadowOpacity: 0.05 },
+  statNumber: { fontSize: 20, fontWeight: "bold" },
+  statLabel: { fontSize: 12, marginTop: 4, fontWeight: "600" },
+  statDivider: { width: 1, height: "100%" },
+  menuContainer: { borderRadius: 24, padding: 8, elevation: 2, shadowColor: "#000", shadowOpacity: 0.05 },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
@@ -256,10 +279,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginRight: 16
   },
-  menuLabel: { fontSize: 16, fontWeight: "600", color: "#334155" },
+  menuLabel: { fontSize: 16, fontWeight: "600" },
   logoutBtn: {
     marginTop: 32,
-    backgroundColor: "#fff1f2",
     padding: 18,
     borderRadius: 20,
     flexDirection: "row",
@@ -267,14 +289,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 10
   },
-  logoutText: { color: "#ef4444", fontWeight: "bold", fontSize: 16 },
+  logoutText: { fontWeight: "bold", fontSize: 16 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
-  modalContent: { backgroundColor: "white", borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 30, paddingBottom: 50 },
+  modalContent: { borderTopLeftRadius: 30, borderTopRightRadius: 30, padding: 30, paddingBottom: 50 },
   modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 30 },
-  modalTitle: { fontSize: 22, fontWeight: "bold", color: "#1e293b" },
+  modalTitle: { fontSize: 22, fontWeight: "bold" },
   formGroup: { marginBottom: 20 },
-  inputLabel: { fontSize: 14, fontWeight: "600", color: "#64748b", marginBottom: 8 },
-  input: { backgroundColor: "#f1f5f9", padding: 15, borderRadius: 15, fontSize: 16, color: "#1e293b" },
-  saveBtn: { backgroundColor: "#3b82f6", padding: 18, borderRadius: 20, alignItems: "center", marginTop: 10 },
+  inputLabel: { fontSize: 14, fontWeight: "600", marginBottom: 8 },
+  input: { padding: 15, borderRadius: 15, fontSize: 16 },
+  saveBtn: { padding: 18, borderRadius: 20, alignItems: "center", marginTop: 10 },
   saveBtnText: { color: "white", fontWeight: "bold", fontSize: 16 }
 });

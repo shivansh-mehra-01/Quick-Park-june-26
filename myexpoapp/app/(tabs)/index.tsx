@@ -7,6 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import { fetchNearbyParkingApi } from "../../services/parkingService";
 import { useRouter } from "expo-router";
+import { useTheme } from "../../context/ThemeContext";
 
 const { width } = Dimensions.get("window");
 const statusBarHeight = StatusBar.currentHeight || (Platform.OS === "ios" ? 44 : 20);
@@ -16,6 +17,7 @@ export default function HomeTab() {
   const [location, setLocation] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
+  const { colors } = useTheme();
 
   const loadData = async () => {
     try {
@@ -44,17 +46,17 @@ export default function HomeTab() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView 
         showsVerticalScrollIndicator={false}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
         {/* Notch-Aware Header Section */}
         <View style={[styles.header, { paddingTop: Platform.OS === "android" ? statusBarHeight + 10 : 10 }]}>
           <View>
-            <Text style={styles.greeting}>Good Morning!</Text>
-            <Text style={styles.locationLabel}>
-              <Ionicons name="location" size={14} color="#3b82f6" /> Bhopal, India
+            <Text style={[styles.greeting, { color: colors.text }]}>Good Morning!</Text>
+            <Text style={[styles.locationLabel, { color: colors.primary }]}>
+              <Ionicons name="location" size={14} color={colors.primary} /> Bhopal, India
             </Text>
           </View>
           <TouchableOpacity style={styles.profileBtn} onPress={() => router.push("/profile")}>
@@ -66,14 +68,14 @@ export default function HomeTab() {
         </View>
 
         {/* Search Simulation */}
-        <TouchableOpacity style={styles.searchBar} onPress={() => router.push("/(tabs)/map")}>
-          <Ionicons name="search" size={20} color="#94a3b8" />
-          <Text style={styles.searchText}>Search for parking spots...</Text>
+        <TouchableOpacity style={[styles.searchBar, { backgroundColor: colors.border }]} onPress={() => router.push("/(tabs)/map")}>
+          <Ionicons name="search" size={20} color={colors.textSecondary} />
+          <Text style={[styles.searchText, { color: colors.textSecondary }]}>Search for parking spots...</Text>
         </TouchableOpacity>
 
         {/* Featured Section */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Featured Spot</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Featured Spot</Text>
           <TouchableOpacity style={styles.featuredCard}>
             <Image 
               source={{ uri: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&q=80&w=800" }} 
@@ -94,53 +96,53 @@ export default function HomeTab() {
         {/* Categories / Quick Actions */}
         <View style={styles.quickActions}>
           <TouchableOpacity style={styles.actionItem} onPress={() => router.push("/wallet")}>
-            <View style={[styles.actionIcon, { backgroundColor: "#dbeafe" }]}>
-              <Ionicons name="flash" size={24} color="#3b82f6" />
+            <View style={[styles.actionIcon, { backgroundColor: colors.primary + "20" }]}>
+              <Ionicons name="flash" size={24} color={colors.primary} />
             </View>
-            <Text style={styles.actionText}>Fast Exit</Text>
+            <Text style={[styles.actionText, { color: colors.textSecondary }]}>Fast Exit</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionItem} onPress={() => router.push("/vehicles")}>
-            <View style={[styles.actionIcon, { backgroundColor: "#fef3c7" }]}>
-              <Ionicons name="car" size={24} color="#d97706" />
+            <View style={[styles.actionIcon, { backgroundColor: colors.warning + "20" }]}>
+              <Ionicons name="car" size={24} color={colors.warning} />
             </View>
-            <Text style={styles.actionText}>Vehicles</Text>
+            <Text style={[styles.actionText, { color: colors.textSecondary }]}>Vehicles</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionItem} onPress={() => router.push("/history")}>
-            <View style={[styles.actionIcon, { backgroundColor: "#dcfce7" }]}>
-              <Ionicons name="receipt" size={24} color="#16a34a" />
+            <View style={[styles.actionIcon, { backgroundColor: colors.success + "20" }]}>
+              <Ionicons name="receipt" size={24} color={colors.success} />
             </View>
-            <Text style={styles.actionText}>History</Text>
+            <Text style={[styles.actionText, { color: colors.textSecondary }]}>History</Text>
           </TouchableOpacity>
         </View>
 
         {/* Nearby List */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Nearest to you</Text>
-            <TouchableOpacity onPress={() => router.push("/(tabs)/map")}><Text style={styles.seeAll}>See All</Text></TouchableOpacity>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Nearest to you</Text>
+            <TouchableOpacity onPress={() => router.push("/(tabs)/map")}><Text style={[styles.seeAll, { color: colors.primary }]}>See All</Text></TouchableOpacity>
           </View>
 
           {parkings.map((item) => (
             <TouchableOpacity 
               key={item.id} 
-              style={styles.parkingCard}
+              style={[styles.parkingCard, { backgroundColor: colors.card, borderColor: colors.border }]}
               onPress={() => router.push(`/parking/${item.id}`)}
             >
               <Image source={{ uri: item.image }} style={styles.cardImage} />
               <View style={styles.cardInfo}>
                 <View style={styles.cardHeader}>
-                  <Text style={styles.cardName} numberOfLines={1}>{item.name}</Text>
-                  <View style={styles.ratingBox}>
-                    <Ionicons name="star" size={12} color="#fbbf24" />
-                    <Text style={styles.ratingText}>{item.rating}</Text>
+                  <Text style={[styles.cardName, { color: colors.text }]} numberOfLines={1}>{item.name}</Text>
+                  <View style={[styles.ratingBox, { backgroundColor: colors.warning + "20" }]}>
+                    <Ionicons name="star" size={12} color={colors.warning} />
+                    <Text style={[styles.ratingText, { color: colors.warning }]}>{item.rating}</Text>
                   </View>
                 </View>
-                <Text style={styles.cardPrice}>{item.price}</Text>
+                <Text style={[styles.cardPrice, { color: colors.primary }]}>{item.price}</Text>
                 <View style={styles.availabilityRow}>
-                  <View style={styles.progressBar}>
-                    <View style={[styles.progressFill, { width: `${(item.availableSlots/item.totalSlots)*100}%` }]} />
+                  <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
+                    <View style={[styles.progressFill, { backgroundColor: colors.primary, width: `${(item.availableSlots/item.totalSlots)*100}%` }]} />
                   </View>
-                  <Text style={styles.slotsText}>{item.availableSlots}/{item.totalSlots} available</Text>
+                  <Text style={[styles.slotsText, { color: colors.textSecondary }]}>{item.availableSlots}/{item.totalSlots} available</Text>
                 </View>
               </View>
             </TouchableOpacity>
@@ -154,7 +156,7 @@ export default function HomeTab() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
+  container: { flex: 1 },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -162,24 +164,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     marginBottom: 20
   },
-  greeting: { fontSize: width > 400 ? 28 : 24, fontWeight: "bold", color: "#1e293b" },
-  locationLabel: { fontSize: 14, color: "#3b82f6", marginTop: 4, fontWeight: "600" },
+  greeting: { fontSize: width > 400 ? 28 : 24, fontWeight: "bold" },
+  locationLabel: { fontSize: 14, marginTop: 4, fontWeight: "600" },
   avatar: { width: 50, height: 50, borderRadius: 25 },
   profileBtn: { elevation: 4, shadowColor: "#000", shadowOpacity: 0.1, shadowRadius: 10 },
   searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f1f5f9",
     marginHorizontal: 24,
     padding: 15,
     borderRadius: 20,
     marginBottom: 24
   },
-  searchText: { marginLeft: 12, color: "#94a3b8", fontSize: 16 },
+  searchText: { marginLeft: 12, fontSize: 16 },
   section: { paddingHorizontal: 24, marginBottom: 24 },
   sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
-  sectionTitle: { fontSize: width > 400 ? 22 : 18, fontWeight: "bold", color: "#1e293b" },
-  seeAll: { color: "#3b82f6", fontWeight: "600", fontSize: 14 },
+  sectionTitle: { fontSize: width > 400 ? 22 : 18, fontWeight: "bold" },
+  seeAll: { fontWeight: "600", fontSize: 14 },
   featuredCard: {
     height: width * 0.5,
     borderRadius: 25,
@@ -217,10 +218,9 @@ const styles = StyleSheet.create({
   },
   actionItem: { alignItems: "center", width: (width - 60) / 3 },
   actionIcon: { width: 55, height: 55, borderRadius: 18, justifyContent: "center", alignItems: "center", marginBottom: 6 },
-  actionText: { fontSize: 12, fontWeight: "600", color: "#475569" },
+  actionText: { fontSize: 12, fontWeight: "600" },
   parkingCard: {
     flexDirection: "row",
-    backgroundColor: "white",
     borderRadius: 20,
     padding: 10,
     marginBottom: 12,
@@ -229,17 +229,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     borderWidth: 1,
-    borderColor: "#f1f5f9"
   },
   cardImage: { width: 80, height: 80, borderRadius: 15 },
   cardInfo: { flex: 1, marginLeft: 12, justifyContent: "center" },
   cardHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  cardName: { fontSize: 16, fontWeight: "bold", color: "#1e293b", flex: 1 },
-  ratingBox: { flexDirection: "row", alignItems: "center", backgroundColor: "#fffbeb", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 },
-  ratingText: { marginLeft: 4, fontSize: 12, fontWeight: "bold", color: "#d97706" },
-  cardPrice: { fontSize: 14, color: "#3b82f6", fontWeight: "600", marginTop: 4 },
+  cardName: { fontSize: 16, fontWeight: "bold", flex: 1 },
+  ratingBox: { flexDirection: "row", alignItems: "center", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 },
+  ratingText: { marginLeft: 4, fontSize: 12, fontWeight: "bold" },
+  cardPrice: { fontSize: 14, fontWeight: "600", marginTop: 4 },
   availabilityRow: { marginTop: 10 },
-  progressBar: { height: 6, backgroundColor: "#f1f5f9", borderRadius: 3, overflow: "hidden", marginBottom: 4 },
-  progressFill: { height: "100%", backgroundColor: "#3b82f6", borderRadius: 3 },
-  slotsText: { fontSize: 11, color: "#64748b", fontWeight: "600" }
+  progressBar: { height: 6, borderRadius: 3, overflow: "hidden", marginBottom: 4 },
+  progressFill: { height: "100%", borderRadius: 3 },
+  slotsText: { fontSize: 11, fontWeight: "600" }
 });

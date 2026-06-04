@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: quick-park-backend-js
+    env: node
+    rootDir: backend-js
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: MONGO_URI
+        value: mongodb+srv://mehrashiv8889_db_user:2z5hauz0PIft3KtI@cluster0.tyat0xx.mongodb.net/?appName=Cluster0
+      - key: NODE_ENV
+        value: production
