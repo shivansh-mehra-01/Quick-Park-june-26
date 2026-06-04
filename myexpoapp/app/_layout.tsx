@@ -6,20 +6,23 @@ import { ThemeProvider } from "../context/ThemeContext";
 
 function RootLayoutNav() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
   const segments = useSegments();
   const router = useRouter();
 
   // Every time the user navigates, we verify they are still authenticated
   useEffect(() => {
     const checkAuth = async () => {
+      setIsChecking(true);
       const user = await authService.getCurrentUser();
       setIsAuthenticated(!!user);
+      setIsChecking(false);
     };
     checkAuth();
   }, [segments]);
 
   useEffect(() => {
-    if (isAuthenticated === null) return; // Still loading
+    if (isAuthenticated === null || isChecking) return; // Still loading
 
     const isLoginScreen = segments[0] === 'login';
     const isRegisterScreen = segments[0] === 'register';
@@ -32,14 +35,14 @@ function RootLayoutNav() {
       // User is already logged in but trying to see the login screen
       router.replace('/(tabs)');
     }
-  }, [isAuthenticated, segments]);
+  }, [isAuthenticated, segments, isChecking]);
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false, animation: 'slide_from_right', gestureEnabled: true }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="history" />
+      <Stack.Screen name="favorites" />
       <Stack.Screen name="vehicles" />
-      <Stack.Screen name="wallet" />
       <Stack.Screen name="settings" />
       <Stack.Screen name="login" />
       <Stack.Screen name="register" />

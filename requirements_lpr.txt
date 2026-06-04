@@ -1,0 +1,6 @@
+opencv-python
+requests
+numpy
+fast-alpr
+easyocr
+python-Levenshtein

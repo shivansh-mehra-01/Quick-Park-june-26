@@ -91,48 +91,12 @@ router.post(['/api/vehicle-exit', '/vehicle-exit', '/exit'], async (req, res) =>
     const p_id = record.Parking_Id;
     const p_oid = toObjectId(p_id);
 
-    // Get rate from parking doc
-    let rate_per_hour = 30; // Default
-    let parking_doc = null;
-    if (p_id) {
-      parking_doc = await parkingsCollection.findOne({ _id: p_oid });
-      if (parking_doc) rate_per_hour = parking_doc.rate_per_hour ?? 30;
-    }
-
     const exit_time = new Date();
     const entry_time = record.Entry_Time;
     const duration_ms = exit_time - entry_time;
     const total_time_minutes = duration_ms / 60000;
 
-    // Minimum 1 hour, then per hour
-    const hours = Math.floor(total_time_minutes / 60) + 1;
-    const total_fee = Math.max(rate_per_hour, hours * rate_per_hour);
-
-    console.log(`DEBUG: ${plate} — ${total_time_minutes.toFixed(1)} mins @ Rs.${rate_per_hour}/hr → Fee: Rs.${total_fee}`);
-
-    // FASTag-style auto payment
-    const user = await usersCollection.findOne({
-      vehicles: { $regex: `^${plate}$`, $options: 'i' },
-    });
-
-    let payment_status = 'Paid (Cash)';
-    let auto_pay_msg = 'Cash payment required at exit.';
-
-    if (user) {
-      const wallet_balance = user.wallet_balance ?? 0;
-      if (wallet_balance >= total_fee) {
-        const new_balance = wallet_balance - total_fee;
-        await usersCollection.updateOne({ _id: user._id }, { $set: { wallet_balance: new_balance } });
-        payment_status = 'Paid (Wallet)';
-        auto_pay_msg = `FASTag detected! Rs.${total_fee} deducted. New Balance: Rs.${new_balance}`;
-        console.log(`DEBUG: Payment OK. New balance: ${new_balance}`);
-      } else {
-        auto_pay_msg = 'FASTag user found but insufficient balance. Please pay cash.';
-        console.log(`DEBUG: Insufficient balance for ${user.email}`);
-      }
-    } else {
-      console.log(`DEBUG: No user found for plate ${plate}`);
-    }
+    console.log(`DEBUG: ${plate} — ${total_time_minutes.toFixed(1)} mins`);
 
     // Update parking record
     await parkingCollection.updateOne(
@@ -140,22 +104,10 @@ router.post(['/api/vehicle-exit', '/vehicle-exit', '/exit'], async (req, res) =>
       {
         $set: {
           Exit_Time: exit_time,
-          Total_Time: `${Math.floor(total_time_minutes)} mins`,
-          Fee: total_fee,
-          Payment_Status: payment_status,
+          Total_Time: `${Math.floor(total_time_minutes)} mins`
         },
       }
     );
-
-    // Save payment record
-    await paymentsCollection.insertOne({
-      record_id: record._id,
-      user_id: user?._id || null,
-      plate_number: plate,
-      amount: total_fee,
-      status: payment_status,
-      timestamp: exit_time,
-    });
 
     // Increment slot
     const target_oid = toObjectId(p_id);
@@ -173,14 +125,12 @@ router.post(['/api/vehicle-exit', '/vehicle-exit', '/exit'], async (req, res) =>
     }
 
     res.json({
-      message: `Vehicle ${plate} exited. ${auto_pay_msg}`,
+      message: `Vehicle ${plate} exited successfully.`,
       vehicle: {
         entryTime: entry_time.toISOString(),
         exitTime: exit_time.toISOString(),
         total_time: Math.floor(total_time_minutes),
       },
-      fee: total_fee,
-      payment_status,
       available_slots: available_now,
     });
   } catch (err) {

@@ -20,7 +20,6 @@ export default function ProfileTab() {
   const [userId, setUserId] = React.useState("");
   const [userName, setUserName] = React.useState("");
   const [userEmail, setUserEmail] = React.useState("");
-  const [wallet, setWallet] = React.useState(0);
   const [isEditModalVisible, setEditModalVisible] = React.useState(false);
   const [tempName, setTempName] = React.useState("");
   const [tempEmail, setTempEmail] = React.useState("");
@@ -37,7 +36,6 @@ export default function ProfileTab() {
           setUserId(currentUser.id);
           setUserName(currentUser.name || "New User");
           setUserEmail(currentUser.email || "");
-          setWallet(currentUser.wallet_balance || 0);
         }
       } catch (error) {
         console.log("Profile load error:", error);
@@ -66,15 +64,10 @@ export default function ProfileTab() {
     }
   };
 
-  const totalSpent = history.reduce((acc, curr) => {
-    const cost = parseInt(curr.cost.replace("₹", "")) || 0;
-    return acc + cost;
-  }, 0);
 
   const menuItems = [
     { icon: "time-outline", label: "Parking History", route: "/history", color: colors.primary },
     { icon: "car-outline", label: "My Vehicles", route: "/vehicles", color: colors.success },
-    { icon: "wallet-outline", label: "Payments & Wallet", route: "/wallet", color: colors.warning },
     { icon: "settings-outline", label: "Settings", route: "/settings", color: colors.textSecondary },
   ];
 
@@ -121,11 +114,6 @@ export default function ProfileTab() {
           <View style={styles.statBox}>
             <Text style={[styles.statNumber, { color: colors.text }]}>{history.length}</Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Sessions</Text>
-          </View>
-          <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
-          <View style={styles.statBox}>
-            <Text style={[styles.statNumber, { color: colors.text }]}>₹{wallet}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Wallet</Text>
           </View>
           <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
           <View style={styles.statBox}>

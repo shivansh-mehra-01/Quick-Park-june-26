@@ -40,7 +40,7 @@ router.get('/profile', async (req, res) => {
 router.post('/profile', async (req, res) => {
   try {
     const { usersCollection } = getCollections();
-    const { email, full_name, phone, vehicles } = req.body;
+    const { email, full_name, phone, vehicles, favorites } = req.body;
 
     if (!email) return res.status(400).json({ error: 'Email is required' });
 
@@ -48,6 +48,7 @@ router.post('/profile', async (req, res) => {
     if (full_name !== undefined) update_data.full_name = full_name;
     if (phone !== undefined) update_data.phone = phone;
     if (vehicles !== undefined) update_data.vehicles = vehicles;
+    if (favorites !== undefined) update_data.favorites = favorites;
 
     await usersCollection.updateOne(
       { email },
@@ -100,12 +101,53 @@ router.get('/profile/:email', async (req, res) => {
 
     if (!user) {
       console.log(`DEBUG: User ${email} not found.`);
-      return res.status(404).json({ error: 'User not found', wallet_balance: 0.0 });
+      return res.status(404).json({ error: 'User not found' });
     }
 
     const userOut = { ...user, _id: user._id.toString() };
     delete userOut.password;
     res.json(userOut);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ── GET /history/:email  (User parking history) ──
+router.get('/history/:email', async (req, res) => {
+  try {
+    const { usersCollection, parkingCollection } = getCollections();
+    const { email } = req.params;
+
+    const user = await usersCollection.findOne({ email });
+    if (!user || !user.vehicles || user.vehicles.length === 0) {
+      return res.json([]);
+    }
+
+    const plates = user.vehicles.map(v => v.plate);
+    
+    // Find all parking records for these plates
+    const records = await parkingCollection.find({ Plate_Number: { $in: plates } }).sort({ Entry_Time: -1 }).toArray();
+    
+    const history = records.map(r => {
+      // Format duration
+      let durationStr = r.Total_Time;
+      if (!durationStr && r.Exit_Time) {
+        const diffMs = new Date(r.Exit_Time) - new Date(r.Entry_Time);
+        durationStr = `${Math.floor(diffMs / 60000)} mins`;
+      }
+      
+      return {
+        id: r._id.toString(),
+        parkingName: r.Parking_Name || 'Smart Parking',
+        plate: r.Plate_Number,
+        date: new Date(r.Entry_Time).toLocaleString(),
+        duration: durationStr || 'In Progress',
+        status: r.Exit_Time ? 'Completed' : 'Active'
+      };
+    });
+
+    res.json(history);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });

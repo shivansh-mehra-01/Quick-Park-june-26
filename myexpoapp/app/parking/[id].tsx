@@ -15,6 +15,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { fetchNearbyParkingApi } from "../../services/parkingService";
+import { authService } from "../../services/authService";
+import { useTheme } from "../../context/ThemeContext";
 
 const { width, height } = Dimensions.get("window");
 const statusBarHeight = StatusBar.currentHeight || (Platform.OS === "ios" ? 44 : 20);
@@ -22,7 +24,12 @@ const statusBarHeight = StatusBar.currentHeight || (Platform.OS === "ios" ? 44 :
 function ParkingDetail() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { colors } = useTheme();
+  
   const [parking, setParking] = useState<any>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [favorites, setFavorites] = useState<string[]>([]);
 
   useEffect(() => {
     async function load() {
@@ -30,6 +37,13 @@ function ParkingDetail() {
         const data = await fetchNearbyParkingApi(0, 0);
         const found = data.find((p: any) => p.id === id) || data[0];
         setParking(found);
+
+        const user = await authService.getCurrentUser();
+        if (user) {
+          setUserId(user.id);
+          setFavorites(user.favorites || []);
+          setIsFavorite((user.favorites || []).includes(found.id));
+        }
       } catch (err) {
         console.log("Detail load error:", err);
       }
@@ -50,6 +64,29 @@ function ParkingDetail() {
     if (url) Linking.openURL(url);
   };
 
+  const toggleFavorite = async () => {
+    if (!userId || !parking) return;
+    
+    let updatedFavorites;
+    if (isFavorite) {
+      updatedFavorites = favorites.filter(favId => favId !== parking.id);
+    } else {
+      updatedFavorites = [...favorites, parking.id];
+    }
+    
+    setIsFavorite(!isFavorite);
+    setFavorites(updatedFavorites);
+    
+    try {
+      await authService.updateProfile(userId, { favorites: updatedFavorites });
+    } catch (error) {
+      console.log("Failed to update favorite", error);
+      // Revert if failed
+      setIsFavorite(isFavorite);
+      setFavorites(favorites);
+    }
+  };
+
   if (!parking) {
     return (
       <View style={styles.loading}>
@@ -59,89 +96,80 @@ function ParkingDetail() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
         {/* Top Image & Back Button */}
         <View style={styles.imageContainer}>
           <Image source={{ uri: parking.image }} style={styles.headerImage} />
           <TouchableOpacity 
-            style={[styles.backBtn, { top: statusBarHeight }]} 
+            style={[styles.backBtn, { top: statusBarHeight + 15, backgroundColor: colors.card }]} 
             onPress={() => router.back()}
           >
-            <Ionicons name="arrow-back" size={24} color="black" />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
+          
           <TouchableOpacity 
-            style={[styles.heartBtn, { top: statusBarHeight }]}
+            style={[styles.heartBtn, { top: statusBarHeight + 15, backgroundColor: colors.card }]}
+            onPress={toggleFavorite}
           >
-            <Ionicons name="heart-outline" size={24} color="black" />
+            <Ionicons name={isFavorite ? "heart" : "heart-outline"} size={24} color={isFavorite ? "#ef4444" : "black"} />
           </TouchableOpacity>
         </View>
 
-        <View style={styles.content}>
-          <View style={styles.mainInfo}>
-            <View>
-              <Text style={styles.title}>{parking.name}</Text>
-              <Text style={styles.address}>Arera Colony, Bhopal, MP</Text>
-            </View>
-            <View style={styles.ratingBox}>
-              <Ionicons name="star" size={16} color="#fbbf24" />
-              <Text style={styles.ratingText}>{parking.rating}</Text>
+        <View style={[styles.content, { backgroundColor: colors.background }]}>
+          <View style={styles.headerRow}>
+            <Text style={[styles.title, { color: colors.text }]}>{parking.name}</Text>
+            <View style={[styles.ratingBox, { backgroundColor: colors.warning + "20" }]}>
+              <Ionicons name="star" size={16} color={colors.warning} />
+              <Text style={[styles.ratingText, { color: colors.warning }]}>{parking.rating}</Text>
             </View>
           </View>
 
           {/* Features Row */}
           <View style={styles.featuresRow}>
-            <View style={styles.feature}>
-              <Ionicons name="car" size={24} color="#3b82f6" />
-              <Text style={styles.featureText}>{parking.totalSlots} Slots</Text>
+            <View style={[styles.feature, { backgroundColor: colors.card }]}>
+              <Ionicons name="car-outline" size={24} color={colors.primary} />
+              <Text style={[styles.featureText, { color: colors.textSecondary }]}>{parking.totalSlots} Slots</Text>
             </View>
-            <View style={styles.feature}>
-              <Ionicons name="shield-checkmark" size={24} color="#16a34a" />
-              <Text style={styles.featureText}>Secure</Text>
+            <View style={[styles.feature, { backgroundColor: colors.card }]}>
+              <Ionicons name="videocam-outline" size={24} color={colors.primary} />
+              <Text style={[styles.featureText, { color: colors.textSecondary }]}>CCTV</Text>
             </View>
-            <View style={styles.feature}>
-              <Ionicons name="time" size={24} color="#d97706" />
-              <Text style={styles.featureText}>24/7 Access</Text>
+            <View style={[styles.feature, { backgroundColor: colors.card }]}>
+              <Ionicons name="shield-checkmark-outline" size={24} color={colors.primary} />
+              <Text style={[styles.featureText, { color: colors.textSecondary }]}>Guarded</Text>
             </View>
           </View>
 
-          <Text style={styles.sectionTitle}>About Parking</Text>
-          <Text style={styles.description}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>About Parking</Text>
+          <Text style={[styles.description, { color: colors.textSecondary }]}>
             This premium parking facility offers automated entry/exit with AI-powered License Plate Recognition. 
             Enjoy hassle-free parking with real-time slot availability and secure surveillance.
           </Text>
 
-          <View style={styles.pricingCard}>
-            <View>
-              <Text style={styles.priceLabel}>Parking Price</Text>
-              <Text style={styles.priceValue}>{parking.price}<Text style={styles.priceUnit}> / hour</Text></Text>
-            </View>
-            <View style={styles.availabilityBadge}>
-              <Text style={styles.availabilityText}>{parking.availableSlots} Left</Text>
-            </View>
-          </View>
-
           {/* Action Buttons */}
-          <TouchableOpacity 
-            style={[styles.secondaryBtn, { marginTop: 24 }]}
-            onPress={() => router.push("/(tabs)/map")}
-          >
-            <Ionicons name="map-outline" size={20} color="#3b82f6" />
-            <Text style={styles.secondaryBtnText}>Show on Internal Map</Text>
-          </TouchableOpacity>
+          <View style={styles.navButtonsRow}>
+            <TouchableOpacity 
+              style={[styles.actionBtn, { backgroundColor: colors.primary }]}
+              onPress={() => router.push({ pathname: "/(tabs)/map", params: { navigateTo: parking.id } })}
+            >
+              <Ionicons name="navigate" size={20} color="white" />
+              <Text style={styles.actionBtnText}>In-App Route</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={[styles.actionBtn, { backgroundColor: '#4285F4' }]}
+              onPress={openInGoogleMaps}
+            >
+              <Ionicons name="map" size={20} color="white" />
+              <Text style={styles.actionBtnText}>Google Maps</Text>
+            </TouchableOpacity>
+          </View>
         </View>
         
         <View style={{ height: 120 }} />
       </ScrollView>
-
-      {/* Sticky Bottom Button */}
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.navBtn} onPress={openInGoogleMaps}>
-          <Ionicons name="navigate" size={20} color="white" />
-          <Text style={styles.navBtnText}>Get Directions Now</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -179,52 +207,28 @@ const styles = StyleSheet.create({
   featureText: { marginTop: 8, fontSize: 12, fontWeight: "600", color: "#475569" },
   sectionTitle: { fontSize: 20, fontWeight: "bold", color: "#1e293b", marginBottom: 12 },
   description: { fontSize: 15, color: "#64748b", lineHeight: 24, marginBottom: 32 },
-  pricingCard: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#f1f5f9",
-    padding: 24,
-    borderRadius: 24
+
+  navButtonsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginTop: 24
   },
-  priceLabel: { fontSize: 14, color: "#64748b", marginBottom: 4 },
-  priceValue: { fontSize: 24, fontWeight: "bold", color: "#1e293b" },
-  priceUnit: { fontSize: 16, fontWeight: "normal", color: "#64748b" },
-  availabilityBadge: { backgroundColor: "#3b82f6", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12 },
-  availabilityText: { color: "white", fontWeight: "bold" },
-  footer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 24,
-    backgroundColor: "white",
-    borderTopWidth: 1,
-    borderTopColor: "#f1f5f9"
-  },
-  navBtn: {
-    backgroundColor: "#1e293b",
-    height: 60,
-    borderRadius: 20,
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    gap: 12
-  },
-  navBtnText: { color: "white", fontSize: 18, fontWeight: "bold" },
-  secondaryBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "#eff6ff",
+  actionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 18,
     borderRadius: 20,
     gap: 10,
-    borderWidth: 1,
-    borderColor: "#bfdbfe"
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
   },
-  secondaryBtnText: {
-    color: "#3b82f6",
+  actionBtnText: {
+    color: "white",
     fontSize: 16,
     fontWeight: "bold"
   }

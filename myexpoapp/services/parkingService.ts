@@ -1,4 +1,5 @@
 import Config from "../constants/Config";
+import { authService } from "./authService";
 
 export async function fetchNearbyParkingApi(lat: number, lon: number): Promise<any[]> {
   try {
@@ -7,14 +8,14 @@ export async function fetchNearbyParkingApi(lat: number, lon: number): Promise<a
     const data = await response.json();
     
     if (Array.isArray(data) && data.length > 0) {
-      return data.map((p: any) => ({
+      return data.map((p: any, index: number) => ({
         id: p._id || p.id,
-        lat: p.location?.coordinates?.[1] || p.latitude || p.lat || 23.1930, 
-        lon: p.location?.coordinates?.[0] || p.longitude || p.lon || 77.4420,
+        // Grid offset for missing coordinates so they don't perfectly stack
+        lat: p.location?.coordinates?.[1] || p.latitude || p.lat || (23.1930 + (Math.floor(index / 5) * 0.01) - 0.02), 
+        lon: p.location?.coordinates?.[0] || p.longitude || p.lon || (77.4420 + ((index % 5) * 0.01) - 0.02),
         name: p.name || "Smart Parking",
         availableSlots: p.available_slots ?? p.availableSlots ?? 0,
         totalSlots: p.total_capacity ?? p.totalSlots ?? 100,
-        price: "₹20/hr",
         rating: 4.8,
         image: "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&q=80&w=400"
       }));
@@ -27,23 +28,21 @@ export async function fetchNearbyParkingApi(lat: number, lon: number): Promise<a
   return [
     {
       id: "demo-1",
-      lat: 23.1930, 
-      lon: 77.4420,
+      lat: lat + 0.002, 
+      lon: lon + 0.002,
       name: "Aashima Mall Parking",
       availableSlots: 45,
       totalSlots: 150,
-      price: "₹30/hr",
       rating: 4.9,
       image: "https://images.unsplash.com/photo-1590674899484-13da0d1b58f5?auto=format&fit=crop&q=80&w=400"
     },
     {
       id: "demo-2",
-      lat: 23.1780,
-      lon: 77.4310,
+      lat: lat - 0.002,
+      lon: lon - 0.001,
       name: "C21 Mall Parking",
       availableSlots: 12,
       totalSlots: 80,
-      price: "₹20/hr",
       rating: 4.5,
       image: "https://images.unsplash.com/photo-1573348722427-f1d6819fdf98?auto=format&fit=crop&q=80&w=400"
     }
@@ -51,18 +50,53 @@ export async function fetchNearbyParkingApi(lat: number, lon: number): Promise<a
 }
 
 export async function fetchUserHistoryApi(): Promise<any[]> {
-  return [
-    { id: "1", parkingName: "Aashima Mall", plate: "MH04JM8765", date: "Today, 11:30 AM", duration: "2h 15m", cost: "₹65", status: "Completed" },
-    { id: "2", parkingName: "C21 Mall", plate: "MH04JM8765", date: "Yesterday, 04:20 PM", duration: "1h 45m", cost: "₹40", status: "Completed" },
-  ];
+  try {
+    const user = await authService.getCurrentUser();
+    if (!user || !user.email) return [];
+    
+    const response = await fetch(`${Config.BACKEND_URL}/history/${user.email}`);
+    if (response.ok) {
+      const data = await response.json();
+      return data;
+    }
+  } catch (error) {
+    console.log("History fetch error:", error);
+  }
+  return [];
 }
 
-export async function fetchRouteApi(start: { latitude: number, longitude: number }, end: { latitude: number, longitude: number }): Promise<any[]> {
-  return [
-    { latitude: start.latitude, longitude: start.longitude },
-    { latitude: (start.latitude + end.latitude) / 2 + 0.001, longitude: (start.longitude + end.longitude) / 2 },
-    { latitude: end.latitude, longitude: end.longitude }
-  ];
+export async function fetchRouteApi(start: { latitude: number, longitude: number }, end: { latitude: number, longitude: number }): Promise<{ coords: any[], distance: number, duration: number }> {
+  try {
+    const response = await fetch(`http://router.project-osrm.org/route/v1/driving/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?overview=full&geometries=geojson`);
+    if (response.ok) {
+      const data = await response.json();
+      if (data.code === "Ok" && data.routes && data.routes.length > 0) {
+        const route = data.routes[0];
+        const coords = route.geometry.coordinates.map((c: any) => ({
+          latitude: c[1],
+          longitude: c[0]
+        }));
+        
+        return {
+          coords,
+          distance: route.distance, // in meters
+          duration: route.duration  // in seconds
+        };
+      }
+    }
+  } catch (err) {
+    console.log("OSRM Error", err);
+  }
+
+  // Fallback to straight line if OSRM fails
+  return {
+    coords: [
+      { latitude: start.latitude, longitude: start.longitude },
+      { latitude: end.latitude, longitude: end.longitude }
+    ],
+    distance: 0,
+    duration: 0
+  };
 }
 
 export async function fetchProfileApi(email: string): Promise<any> {
@@ -72,7 +106,7 @@ export async function fetchProfileApi(email: string): Promise<any> {
   } catch (error) {
     console.log("Profile fetch error:", error);
   }
-  return { full_name: "Abhishek Maury", email: email, wallet_balance: 500 };
+  return { full_name: "Abhishek Maury", email: email };
 }
 
 export async function updateProfileApi(data: { email: string, full_name: string }): Promise<boolean> {

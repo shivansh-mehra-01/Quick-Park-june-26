@@ -13,7 +13,6 @@ const vehicleRoutes   = require('./routes/vehicles');
 const dashboardRoutes = require('./routes/dashboard');
 const profileRoutes   = require('./routes/profile');
 const bookingsRoutes      = require('./routes/bookings');
-const pricingRoutes       = require('./routes/pricing');
 const notificationsRoutes = require('./routes/notifications');
 
 const app = express();
@@ -35,7 +34,6 @@ app.use('/', vehicleRoutes);
 app.use('/', dashboardRoutes);
 app.use('/', profileRoutes);
 app.use('/', bookingsRoutes);
-app.use('/', pricingRoutes);
 app.use('/', notificationsRoutes);
 
 // ── 404 Handler ──

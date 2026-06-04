@@ -30,8 +30,6 @@ router.get('/bookings/today', async (req, res) => {
         entry_time: entry?.toISOString() ?? null,
         exit_time: exit?.toISOString() ?? null,
         duration_mins,
-        fee: r.Fee ?? null,
-        payment_status: r.Payment_Status ?? null,
         parking_name: r.Parking_Name ?? null,
       };
     });
@@ -59,15 +57,13 @@ router.get('/bookings/export', async (req, res) => {
       .toArray();
 
     // Build CSV
-    const header = 'Plate Number,Entry Time,Exit Time,Duration (mins),Fee (Rs.),Payment Status,Parking Name\n';
+    const header = 'Plate Number,Entry Time,Exit Time,Duration (mins),Parking Name\n';
     const rows = records.map(r => {
       const entry = r.Entry_Time ? new Date(r.Entry_Time).toLocaleString() : '';
       const exit = r.Exit_Time ? new Date(r.Exit_Time).toLocaleString() : 'Still Parked';
       const duration = r.Total_Time ?? '';
-      const fee = r.Fee ?? '';
-      const payment = r.Payment_Status ?? '';
       const parking = r.Parking_Name ?? '';
-      return `${r.Plate_Number},${entry},${exit},${duration},${fee},${payment},${parking}`;
+      return `${r.Plate_Number},${entry},${exit},${duration},${parking}`;
     });
 
     const csv = header + rows.join('\n');

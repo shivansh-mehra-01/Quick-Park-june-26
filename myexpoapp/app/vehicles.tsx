@@ -7,11 +7,13 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { authService } from "../services/authService";
+import { useTheme } from "../context/ThemeContext";
 
 const statusBarHeight = StatusBar.currentHeight || (Platform.OS === "ios" ? 44 : 20);
 
 export default function VehiclesScreen() {
   const router = useRouter();
+  const { colors } = useTheme();
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState("");
@@ -29,10 +31,24 @@ export default function VehiclesScreen() {
   const loadVehicles = async () => {
     try {
       const user = await authService.getCurrentUser();
-      if (user) {
-        setUserId(user.id);
-        setVehicles(user.vehicles || []);
-      }
+        if (user) {
+          setUserId(user.id);
+          
+          // Legacy support: users created via backend /signup have vehicles as array of strings
+          const normalizedVehicles = (user.vehicles || []).map((v: any, index: number) => {
+            if (typeof v === "string") {
+              return {
+                id: `legacy-${index}-${Date.now()}`,
+                plate: v,
+                type: "Car",
+                default: index === 0
+              };
+            }
+            return v;
+          });
+          
+          setVehicles(normalizedVehicles);
+        }
     } catch (error) {
       console.error("Error loading vehicles:", error);
     } finally {
@@ -69,6 +85,11 @@ export default function VehiclesScreen() {
   };
 
   const handleDelete = async (id: string) => {
+    if (vehicles.length <= 1) {
+      Alert.alert("Action Denied", "You must have at least one vehicle registered.");
+      return;
+    }
+
     Alert.alert(
       "Delete Vehicle",
       "Are you sure you want to remove this vehicle?",
@@ -109,14 +130,14 @@ export default function VehiclesScreen() {
   };
 
   const renderItem = ({ item }: { item: any }) => (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.card }]}>
       <View style={styles.cardLeft}>
-        <View style={styles.iconContainer}>
-          <Ionicons name={item.type === "Car" ? "car-sport-outline" : "bicycle-outline"} size={28} color="#3b82f6" />
+        <View style={[styles.iconContainer, { backgroundColor: colors.primary + "15" }]}>
+          <Ionicons name={item.type === "Car" ? "car-sport-outline" : "bicycle-outline"} size={28} color={colors.primary} />
         </View>
         <View>
-          <Text style={styles.plate}>{item.plate}</Text>
-          <Text style={styles.type}>{item.type}</Text>
+          <Text style={[styles.plate, { color: colors.text }]}>{item.plate}</Text>
+          <Text style={[styles.type, { color: colors.textSecondary }]}>{item.type}</Text>
         </View>
       </View>
       
@@ -127,7 +148,7 @@ export default function VehiclesScreen() {
           </View>
         ) : (
           <TouchableOpacity onPress={() => handleMakeDefault(item.id)} style={styles.actionBtn}>
-            <Text style={styles.actionText}>Make Default</Text>
+            <Text style={[styles.actionText, { color: colors.primary }]}>Make Default</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.deleteBtn}>
@@ -140,25 +161,25 @@ export default function VehiclesScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#3b82f6" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={[styles.header, { paddingTop: Platform.OS === "android" ? statusBarHeight + 10 : 10 }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { paddingTop: Platform.OS === "android" ? statusBarHeight + 10 : 10, backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="#1e293b" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>My Vehicles</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>My Vehicles</Text>
         <View style={{ width: 24 }} />
       </View>
 
       {vehicles.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="car-sport-outline" size={80} color="#cbd5e1" />
-          <Text style={styles.emptyTitle}>No Vehicles Yet</Text>
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>No Vehicles Yet</Text>
           <Text style={styles.emptySubtitle}>Add your first vehicle to get started with Quick Park.</Text>
         </View>
       ) : (
@@ -170,7 +191,7 @@ export default function VehiclesScreen() {
         />
       )}
 
-      <TouchableOpacity style={styles.addBtn} onPress={() => setModalVisible(true)}>
+      <TouchableOpacity style={[styles.addBtn, { backgroundColor: colors.primary }]} onPress={() => setModalVisible(true)}>
         <Ionicons name="add" size={24} color="white" />
         <Text style={styles.addBtnText}>Add New Vehicle</Text>
       </TouchableOpacity>
@@ -186,44 +207,45 @@ export default function VehiclesScreen() {
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.modalOverlay}
         >
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add New Vehicle</Text>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Add New Vehicle</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={24} color="#64748b" />
+                <Ionicons name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.typeSelector}>
               <TouchableOpacity 
-                style={[styles.typeBtn, newType === "Car" && styles.typeBtnActive]}
+                style={[styles.typeBtn, newType === "Car" && { backgroundColor: colors.primary }, newType !== "Car" && { backgroundColor: colors.background }]}
                 onPress={() => setNewType("Car")}
               >
-                <Ionicons name="car-sport" size={24} color={newType === "Car" ? "white" : "#64748b"} />
-                <Text style={[styles.typeText, newType === "Car" && styles.typeTextActive]}>Car</Text>
+                <Ionicons name="car-sport" size={24} color={newType === "Car" ? "white" : colors.textSecondary} />
+                <Text style={[styles.typeText, newType === "Car" ? { color: "white" } : { color: colors.textSecondary }]}>Car</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.typeBtn, newType === "Bike" && styles.typeBtnActive]}
+                style={[styles.typeBtn, newType === "Bike" && { backgroundColor: colors.primary }, newType !== "Bike" && { backgroundColor: colors.background }]}
                 onPress={() => setNewType("Bike")}
               >
-                <Ionicons name="bicycle" size={24} color={newType === "Bike" ? "white" : "#64748b"} />
-                <Text style={[styles.typeText, newType === "Bike" && styles.typeTextActive]}>Bike</Text>
+                <Ionicons name="bicycle" size={24} color={newType === "Bike" ? "white" : colors.textSecondary} />
+                <Text style={[styles.typeText, newType === "Bike" ? { color: "white" } : { color: colors.textSecondary }]}>Bike</Text>
               </TouchableOpacity>
             </View>
 
             <View style={styles.formGroup}>
-              <Text style={styles.inputLabel}>License Plate Number</Text>
+              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>License Plate Number</Text>
               <TextInput 
-                style={styles.input}
+                style={[styles.input, { backgroundColor: colors.background, color: colors.text }]}
                 value={newPlate}
                 onChangeText={setNewPlate}
                 placeholder="e.g. MH04 AB 1234"
+                placeholderTextColor={colors.textSecondary}
                 autoCapitalize="characters"
               />
             </View>
 
             <TouchableOpacity 
-              style={[styles.saveBtn, isSaving && styles.saveBtnDisabled]} 
+              style={[styles.saveBtn, { backgroundColor: colors.primary }, isSaving && styles.saveBtnDisabled]} 
               onPress={handleAddVehicle}
               disabled={isSaving}
             >
@@ -243,7 +265,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingBottom: 15,
     backgroundColor: "white",
     borderBottomWidth: 1,
@@ -251,7 +273,7 @@ const styles = StyleSheet.create({
   },
   backBtn: { padding: 5 },
   headerTitle: { fontSize: 20, fontWeight: "bold", color: "#1e293b" },
-  list: { padding: 20 },
+  list: { padding: 24 },
   card: {
     flexDirection: "row",
     alignItems: "center",

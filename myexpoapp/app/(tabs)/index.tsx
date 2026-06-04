@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   View, Text, StyleSheet, ScrollView, RefreshControl, 
-  SafeAreaView, TouchableOpacity, Image, Dimensions, StatusBar, Platform 
+  SafeAreaView, TouchableOpacity, Image, Dimensions, StatusBar, Platform, TextInput
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Location from "expo-location";
@@ -16,8 +16,21 @@ export default function HomeTab() {
   const [parkings, setParkings] = useState<any[]>([]);
   const [location, setLocation] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const router = useRouter();
   const { colors } = useTheme();
+
+  const getDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; 
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; 
+  };
 
   const loadData = async () => {
     try {
@@ -45,6 +58,24 @@ export default function HomeTab() {
     setRefreshing(false);
   };
 
+  let displayedParkings = parkings;
+
+  if (searchQuery) {
+    displayedParkings = displayedParkings.filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  } else if (!showAll) {
+    if (location) {
+      displayedParkings = displayedParkings.filter(p => getDistance(location.latitude, location.longitude, p.lat, p.lon) <= 5);
+    } else {
+      displayedParkings = displayedParkings.slice(0, 5);
+    }
+  }
+
+  if (location) {
+    displayedParkings = [...displayedParkings].sort((a, b) => 
+      getDistance(location.latitude, location.longitude, a.lat, a.lon) - getDistance(location.latitude, location.longitude, b.lat, b.lon)
+    );
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView 
@@ -68,10 +99,16 @@ export default function HomeTab() {
         </View>
 
         {/* Search Simulation */}
-        <TouchableOpacity style={[styles.searchBar, { backgroundColor: colors.border }]} onPress={() => router.push("/(tabs)/map")}>
+        <View style={[styles.searchBar, { backgroundColor: colors.border }]}>
           <Ionicons name="search" size={20} color={colors.textSecondary} />
-          <Text style={[styles.searchText, { color: colors.textSecondary }]}>Search for parking spots...</Text>
-        </TouchableOpacity>
+          <TextInput 
+            style={[styles.searchText, { color: colors.text, flex: 1, padding: 0 }]} 
+            placeholder="Search for parking spots..." 
+            placeholderTextColor={colors.textSecondary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
 
         {/* Featured Section */}
         <View style={styles.section}>
@@ -95,17 +132,17 @@ export default function HomeTab() {
 
         {/* Categories / Quick Actions */}
         <View style={styles.quickActions}>
-          <TouchableOpacity style={styles.actionItem} onPress={() => router.push("/wallet")}>
-            <View style={[styles.actionIcon, { backgroundColor: colors.primary + "20" }]}>
-              <Ionicons name="flash" size={24} color={colors.primary} />
-            </View>
-            <Text style={[styles.actionText, { color: colors.textSecondary }]}>Fast Exit</Text>
-          </TouchableOpacity>
           <TouchableOpacity style={styles.actionItem} onPress={() => router.push("/vehicles")}>
             <View style={[styles.actionIcon, { backgroundColor: colors.warning + "20" }]}>
               <Ionicons name="car" size={24} color={colors.warning} />
             </View>
             <Text style={[styles.actionText, { color: colors.textSecondary }]}>Vehicles</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionItem} onPress={() => router.push("/favorites")}>
+            <View style={[styles.actionIcon, { backgroundColor: colors.danger + "20" }]}>
+              <Ionicons name="heart" size={24} color={colors.danger} />
+            </View>
+            <Text style={[styles.actionText, { color: colors.textSecondary }]}>Favorites</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionItem} onPress={() => router.push("/history")}>
             <View style={[styles.actionIcon, { backgroundColor: colors.success + "20" }]}>
@@ -118,17 +155,27 @@ export default function HomeTab() {
         {/* Nearby List */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Nearest to you</Text>
-            <TouchableOpacity onPress={() => router.push("/(tabs)/map")}><Text style={[styles.seeAll, { color: colors.primary }]}>See All</Text></TouchableOpacity>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              {searchQuery ? "Search Results" : showAll ? "All Parkings" : "Nearest to you (5 km)"}
+            </Text>
+            {!searchQuery && (
+              <TouchableOpacity onPress={() => setShowAll(!showAll)}>
+                <Text style={[styles.seeAll, { color: colors.primary }]}>{showAll ? "View Less" : "View All"}</Text>
+              </TouchableOpacity>
+            )}
           </View>
 
-          {parkings.map((item) => (
+          {displayedParkings.length === 0 && (
+            <Text style={{ color: colors.textSecondary, textAlign: 'center', marginTop: 20 }}>No parkings found nearby.</Text>
+          )}
+
+          {displayedParkings.map((item) => (
             <TouchableOpacity 
               key={item.id} 
               style={[styles.parkingCard, { backgroundColor: colors.card, borderColor: colors.border }]}
               onPress={() => router.push(`/parking/${item.id}`)}
             >
-              <Image source={{ uri: item.image }} style={styles.cardImage} />
+              <Image source={{ uri: item.image || "https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&q=80&w=800" }} style={styles.cardImage} />
               <View style={styles.cardInfo}>
                 <View style={styles.cardHeader}>
                   <Text style={[styles.cardName, { color: colors.text }]} numberOfLines={1}>{item.name}</Text>
@@ -137,7 +184,6 @@ export default function HomeTab() {
                     <Text style={[styles.ratingText, { color: colors.warning }]}>{item.rating}</Text>
                   </View>
                 </View>
-                <Text style={[styles.cardPrice, { color: colors.primary }]}>{item.price}</Text>
                 <View style={styles.availabilityRow}>
                   <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
                     <View style={[styles.progressFill, { backgroundColor: colors.primary, width: `${(item.availableSlots/item.totalSlots)*100}%` }]} />
@@ -236,7 +282,6 @@ const styles = StyleSheet.create({
   cardName: { fontSize: 16, fontWeight: "bold", flex: 1 },
   ratingBox: { flexDirection: "row", alignItems: "center", paddingHorizontal: 6, paddingVertical: 2, borderRadius: 8 },
   ratingText: { marginLeft: 4, fontSize: 12, fontWeight: "bold" },
-  cardPrice: { fontSize: 14, fontWeight: "600", marginTop: 4 },
   availabilityRow: { marginTop: 10 },
   progressBar: { height: 6, borderRadius: 3, overflow: "hidden", marginBottom: 4 },
   progressFill: { height: "100%", borderRadius: 3 },

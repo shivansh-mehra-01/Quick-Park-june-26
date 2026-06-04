@@ -11,7 +11,7 @@ router.get(['/auth/parkings', '/api/parkings', '/parkings'], async (req, res) =>
   try {
     const { parkingsCollection } = getCollections();
     const data = await parkingsCollection
-      .find({}, { projection: { _id: 1, name: 1, total_capacity: 1, available_slots: 1 } })
+      .find({}, { projection: { _id: 1, name: 1, total_capacity: 1, available_slots: 1, latitude: 1, longitude: 1, address: 1, type: 1 } })
       .toArray();
 
     // Login screen — sirf names chahiye
@@ -57,7 +57,6 @@ router.post(['/api/signup', '/signup'], async (req, res) => {
       email,
       password: hashed,
       full_name,
-      wallet_balance: 500.0,
       vehicles: [vehicle_plate.toUpperCase()],
     });
 

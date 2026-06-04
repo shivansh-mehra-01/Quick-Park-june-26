@@ -11,7 +11,6 @@ let client;
 let parkingCollection;
 let statusCollection;
 let usersCollection;
-let paymentsCollection;
 let parkingsCollection;
 
 async function connectDB() {
@@ -29,7 +28,6 @@ async function connectDB() {
     parkingCollection  = db.collection('parking_records');
     statusCollection   = db.collection('parking_status');
     usersCollection    = db.collection('users');
-    paymentsCollection = db.collection('payments');
     parkingsCollection = db.collection('parkings');
 
     // Initialize status doc if missing
@@ -55,7 +53,6 @@ function getCollections() {
     parkingCollection,
     statusCollection,
     usersCollection,
-    paymentsCollection,
     parkingsCollection,
     TOTAL_CAPACITY,
     ObjectId,
