@@ -16,7 +16,7 @@ function toObjectId(id) {
 // ── POST /entry  (Vehicle Entry) ──
 router.post(['/api/vehicle-entry', '/vehicle-entry', '/entry'], async (req, res) => {
   try {
-    const { parkingCollection, parkingsCollection, statusCollection, TOTAL_CAPACITY } = getCollections();
+    const { parkingCollection, parkingsCollection, statusCollection, usersCollection, TOTAL_CAPACITY } = getCollections();
     const { plateNumber, plate_number, parkingId, parking_id } = req.body;
 
     const plate = plateNumber || plate_number;
