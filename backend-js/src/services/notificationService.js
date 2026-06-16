@@ -8,13 +8,17 @@ async function sendPushNotification(usersCollection, plate, title, body, data = 
     if (!plate) return null;
     
     const cleanPlate = plate.trim().toUpperCase();
+    
+    // Build space-insensitive regex to match plate regardless of user input spacing
+    const regexPattern = '^' + cleanPlate.split('').join('\\s*') + '$';
+    const plateRegex = new RegExp(regexPattern, 'i');
 
     // Query to find user registered with this vehicle plate (as string or object)
     const user = await usersCollection.findOne({
       $or: [
-        { vehicles: cleanPlate },
-        { "vehicles.plate": cleanPlate },
-        { "vehicles": { $elemMatch: { plate: cleanPlate } } }
+        { vehicles: plateRegex },
+        { "vehicles.plate": plateRegex },
+        { "vehicles": { $elemMatch: { plate: plateRegex } } }
       ]
     });
 
