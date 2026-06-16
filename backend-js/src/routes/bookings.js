@@ -7,12 +7,17 @@ const router = express.Router();
 router.get('/bookings/today', async (req, res) => {
   try {
     const { parkingCollection } = getCollections();
+    let { parking_name } = req.query;
+
+    if (parking_name === 'null' || !parking_name) {
+      return res.status(400).json({ error: 'Parking name is required' });
+    }
 
     const today_start = new Date();
     today_start.setHours(0, 0, 0, 0);
 
     const records = await parkingCollection
-      .find({ Entry_Time: { $gte: today_start } })
+      .find({ Parking_Name: parking_name, Entry_Time: { $gte: today_start } })
       .sort({ Entry_Time: -1 })
       .toArray();
 
@@ -46,13 +51,18 @@ router.get('/bookings/export', async (req, res) => {
   try {
     const { parkingCollection } = getCollections();
     const { start_date, end_date } = req.query;
+    let { parking_name } = req.query;
+
+    if (parking_name === 'null' || !parking_name) {
+      return res.status(400).json({ error: 'Parking name is required' });
+    }
 
     const start = start_date ? new Date(start_date) : new Date(0);
     const end = end_date ? new Date(end_date) : new Date();
     end.setHours(23, 59, 59, 999);
 
     const records = await parkingCollection
-      .find({ Entry_Time: { $gte: start, $lte: end } })
+      .find({ Parking_Name: parking_name, Entry_Time: { $gte: start, $lte: end } })
       .sort({ Entry_Time: -1 })
       .toArray();
 

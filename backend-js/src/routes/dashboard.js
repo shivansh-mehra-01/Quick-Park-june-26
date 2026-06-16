@@ -9,16 +9,15 @@ router.get('/dashboard/stats', async (req, res) => {
     const { parkingCollection, parkingsCollection, TOTAL_CAPACITY } = getCollections();
     let { parking_name } = req.query;
 
-    if (parking_name === 'null' || !parking_name) parking_name = null;
+    if (parking_name === 'null' || !parking_name) {
+      return res.status(400).json({ error: 'Parking name is required' });
+    }
 
-    const filter_query = {};
+    const filter_query = { Parking_Name: parking_name };
     let p_capacity = TOTAL_CAPACITY;
 
-    if (parking_name) {
-      filter_query.Parking_Name = parking_name;
-      const p_doc = await parkingsCollection.findOne({ name: parking_name });
-      if (p_doc) p_capacity = p_doc.total_capacity ?? TOTAL_CAPACITY;
-    }
+    const p_doc = await parkingsCollection.findOne({ name: parking_name });
+    if (p_doc) p_capacity = p_doc.total_capacity ?? TOTAL_CAPACITY;
 
     const today_start = new Date();
     today_start.setHours(0, 0, 0, 0);
@@ -56,16 +55,17 @@ router.get('/dashboard/stats', async (req, res) => {
 router.get('/occupancy/live', async (req, res) => {
   try {
     const { parkingCollection, parkingsCollection, TOTAL_CAPACITY } = getCollections();
-    const { parking_name } = req.query;
+    let { parking_name } = req.query;
 
-    const filter_query = { Exit_Time: null };
+    if (parking_name === 'null' || !parking_name) {
+      return res.status(400).json({ error: 'Parking name is required' });
+    }
+
+    const filter_query = { Parking_Name: parking_name, Exit_Time: null };
     let p_capacity = TOTAL_CAPACITY;
 
-    if (parking_name) {
-      filter_query.Parking_Name = parking_name;
-      const p_doc = await parkingsCollection.findOne({ name: parking_name });
-      if (p_doc) p_capacity = p_doc.total_capacity ?? TOTAL_CAPACITY;
-    }
+    const p_doc = await parkingsCollection.findOne({ name: parking_name });
+    if (p_doc) p_capacity = p_doc.total_capacity ?? TOTAL_CAPACITY;
 
     const active_sessions_raw = await parkingCollection
       .find(filter_query)

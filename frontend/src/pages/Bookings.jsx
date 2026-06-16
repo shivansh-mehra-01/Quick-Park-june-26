@@ -12,7 +12,8 @@ export default function Bookings() {
 
   const fetchBookings = async () => {
     try {
-      const res = await api.get('/bookings/today');
+      const parkingName = localStorage.getItem('parking_name');
+      const res = await api.get(`/bookings/today?parking_name=${parkingName}`);
       setBookings(res.data);
       setLoading(false);
     } catch (err) {
@@ -31,7 +32,8 @@ export default function Bookings() {
   );
 
   const handleExport = () => {
-    window.open(`${api.defaults.baseURL}/bookings/export?start_date=${startDate}&end_date=${endDate}`, '_blank');
+    const parkingName = localStorage.getItem('parking_name');
+    window.open(`${api.defaults.baseURL}/bookings/export?parking_name=${parkingName}&start_date=${startDate}&end_date=${endDate}`, '_blank');
   };
 
   return (
