@@ -64,6 +64,22 @@ export default function MapTab() {
     };
   }, []);
 
+  // Poll for real-time parking slots updates in the background
+  useEffect(() => {
+    let interval: any;
+    if (location && !isNavigating) {
+      interval = setInterval(async () => {
+        try {
+          const data = await fetchNearbyParkingApi(location.latitude, location.longitude);
+          setParkings(data);
+        } catch (err) {
+          console.log("Real-time slots polling error:", err);
+        }
+      }, 8000);
+    }
+    return () => clearInterval(interval);
+  }, [location, isNavigating]);
+
   // Handle incoming navigation requests from other screens
   useEffect(() => {
     async function startExternalNav() {
