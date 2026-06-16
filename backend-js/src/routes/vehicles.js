@@ -39,7 +39,8 @@ router.post(['/api/vehicle-entry', '/vehicle-entry', '/entry'], async (req, res)
     }
 
     if (parking) {
-      available_slots = parking.available_slots ?? 0;
+      const activeCount = await parkingCollection.countDocuments({ Parking_Name: parking.name, Exit_Time: null });
+      available_slots = Math.max(0, (parking.total_capacity ?? 100) - activeCount);
     } else {
       const status = await statusCollection.findOne({ _id: 'status' });
       available_slots = status?.available_slots ?? 0;
@@ -69,16 +70,17 @@ router.post(['/api/vehicle-entry', '/vehicle-entry', '/entry'], async (req, res)
       { event: 'entry', parkingName }
     ).catch(err => console.error('Error triggering entry push notification:', err));
 
-    // Decrement slot
+    // Decrement slot count
+    const new_available = available_slots - 1;
     if (parking) {
-      await parkingsCollection.updateOne({ _id: p_oid }, { $inc: { available_slots: -1 } });
+      await parkingsCollection.updateOne({ _id: p_oid }, { $set: { available_slots: new_available } });
     } else {
-      await statusCollection.updateOne({ _id: 'status' }, { $inc: { available_slots: -1 } });
+      await statusCollection.updateOne({ _id: 'status' }, { $set: { available_slots: new_available } });
     }
 
     res.status(201).json({
       message: `Vehicle ${plate} entered at ${parking?.name || 'Parking'}`,
-      available_slots: available_slots - 1,
+      available_slots: new_available,
     });
   } catch (err) {
     console.error(err);
@@ -139,19 +141,20 @@ router.post(['/api/vehicle-exit', '/vehicle-exit', '/exit'], async (req, res) =>
       { event: 'exit', parkingName: record.Parking_Name }
     ).catch(err => console.error('Error triggering exit push notification:', err));
 
-    // Increment slot
+    // Fresh available slots calculated dynamically
+    let available_now = 0;
     const target_oid = toObjectId(p_id);
     if (target_oid && p_id) {
-      await parkingsCollection.updateOne({ _id: target_oid }, { $inc: { available_slots: 1 } });
-    } else {
-      await statusCollection.updateOne({ _id: 'status' }, { $inc: { available_slots: 1 } });
-    }
-
-    // Fresh available slots
-    let available_now = 0;
-    if (target_oid && p_id) {
       const p_doc = await parkingsCollection.findOne({ _id: target_oid });
-      available_now = p_doc?.available_slots ?? 0;
+      if (p_doc) {
+        const activeCount = await parkingCollection.countDocuments({ Parking_Name: p_doc.name, Exit_Time: null });
+        available_now = Math.max(0, (p_doc.total_capacity ?? 100) - activeCount);
+        await parkingsCollection.updateOne({ _id: target_oid }, { $set: { available_slots: available_now } });
+      }
+    } else {
+      const status = await statusCollection.findOne({ _id: 'status' });
+      available_now = (status?.available_slots ?? 0) + 1;
+      await statusCollection.updateOne({ _id: 'status' }, { $set: { available_slots: available_now } });
     }
 
     res.json({

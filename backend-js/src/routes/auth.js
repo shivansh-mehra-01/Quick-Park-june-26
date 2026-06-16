@@ -9,7 +9,7 @@ const router = express.Router();
 // ── GET /parkings       (Full list) ──
 router.get(['/auth/parkings', '/api/parkings', '/parkings'], async (req, res) => {
   try {
-    const { parkingsCollection } = getCollections();
+    const { parkingsCollection, parkingCollection } = getCollections();
     const data = await parkingsCollection
       .find({}, { projection: { _id: 1, name: 1, total_capacity: 1, available_slots: 1, latitude: 1, longitude: 1, address: 1, type: 1 } })
       .toArray();
@@ -20,8 +20,29 @@ router.get(['/auth/parkings', '/api/parkings', '/parkings'], async (req, res) =>
       return res.json(names);
     }
 
-    // Full list — ObjectId string mein convert karo
-    const formatted = data.map(p => ({ ...p, _id: p._id.toString() }));
+    // Compute dynamic available slots and update database to match
+    const formatted = await Promise.all(data.map(async (p) => {
+      const activeCount = await parkingCollection.countDocuments({
+        Parking_Name: p.name,
+        Exit_Time: null
+      });
+      const totalCapacity = p.total_capacity ?? 100;
+      const computedAvailable = Math.max(0, totalCapacity - activeCount);
+
+      // If stored value is different, sync it in the database
+      if (p.available_slots !== computedAvailable) {
+        await parkingsCollection.updateOne(
+          { _id: p._id },
+          { $set: { available_slots: computedAvailable } }
+        );
+      }
+
+      return {
+        ...p,
+        _id: p._id.toString(),
+        available_slots: computedAvailable
+      };
+    }));
 
     if (formatted.length === 0) {
       return res.json([{

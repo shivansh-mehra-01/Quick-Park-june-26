@@ -849,7 +849,7 @@ def update_vote_buffer(vote_buffers, session_key, text, conf, source, now):
 # ============================================================
 # ⚙️  Parking badlni ho toh neeche TARGET_PARKING_NAME change karo:
 
-TARGET_PARKING_NAME = "New Market Multi-Level Parking"
+TARGET_PARKING_NAME = "Rani Kamlapati Railway Station Parking"
 # BASE_URL = "https://smart-parking-usm7.onrender.com/api"
 BASE_URL = "https://quick-park-june-26.onrender.com"
 

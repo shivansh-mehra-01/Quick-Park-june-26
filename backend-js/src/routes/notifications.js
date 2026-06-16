@@ -17,7 +17,11 @@ router.get('/notifications', async (req, res) => {
     const parkings = await parkingsCollection.find({}).toArray();
     for (const p of parkings) {
       const total = p.total_capacity || TOTAL_CAPACITY;
-      const available = p.available_slots ?? total;
+      const activeCount = await parkingCollection.countDocuments({
+        Parking_Name: p.name,
+        Exit_Time: null
+      });
+      const available = Math.max(0, total - activeCount);
       const occupancy = ((total - available) / total) * 100;
 
       if (occupancy >= 95) {
