@@ -124,12 +124,21 @@ router.get('/history/:email', async (req, res) => {
     if (!user || !user.vehicles || user.vehicles.length === 0) {
       return res.json([]);
     }
-
-    const plates = user.vehicles.map(v => {
-      if (typeof v === 'string') return v.toUpperCase();
-      if (v && typeof v === 'object' && v.plate) return v.plate.toUpperCase();
-      return null;
-    }).filter(Boolean);
+    const plates = [];
+    user.vehicles.forEach(v => {
+      let rawPlate = '';
+      if (typeof v === 'string') rawPlate = v;
+      else if (v && typeof v === 'object' && v.plate) rawPlate = v.plate;
+      
+      if (rawPlate) {
+        const upper = rawPlate.toUpperCase();
+        const clean = upper.replace(/\s+/g, '');
+        plates.push(upper);
+        if (clean !== upper) {
+          plates.push(clean);
+        }
+      }
+    });
     
     // Find all parking records for these plates
     const records = await parkingCollection.find({ Plate_Number: { $in: plates } }).sort({ Entry_Time: -1 }).toArray();
