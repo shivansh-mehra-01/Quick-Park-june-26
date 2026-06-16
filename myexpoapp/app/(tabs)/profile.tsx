@@ -109,19 +109,6 @@ export default function ProfileTab() {
           <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{userEmail}</Text>
         </View>
 
-        {/* Dynamic Stats Row */}
-        <View style={[styles.statsRow, { backgroundColor: colors.card }]}>
-          <View style={styles.statBox}>
-            <Text style={[styles.statNumber, { color: colors.text }]}>{history.length}</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Sessions</Text>
-          </View>
-          <View style={[styles.statDivider, { backgroundColor: colors.border }]} />
-          <View style={styles.statBox}>
-            <Text style={[styles.statNumber, { color: colors.text }]}>4.9</Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Rating</Text>
-          </View>
-        </View>
-
         {/* Menu Items */}
         <View style={[styles.menuContainer, { backgroundColor: colors.card }]}>
           {menuItems.map((item, index) => (
