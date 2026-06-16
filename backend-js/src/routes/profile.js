@@ -125,7 +125,11 @@ router.get('/history/:email', async (req, res) => {
       return res.json([]);
     }
 
-    const plates = user.vehicles.map(v => v.plate);
+    const plates = user.vehicles.map(v => {
+      if (typeof v === 'string') return v.toUpperCase();
+      if (v && typeof v === 'object' && v.plate) return v.plate.toUpperCase();
+      return null;
+    }).filter(Boolean);
     
     // Find all parking records for these plates
     const records = await parkingCollection.find({ Plate_Number: { $in: plates } }).sort({ Entry_Time: -1 }).toArray();
