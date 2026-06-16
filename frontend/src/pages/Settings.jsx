@@ -68,7 +68,7 @@ export default function Settings() {
         <div className="flex items-center justify-between">
           <div>
             <h4 className="text-lg font-bold font-headline text-on-surface">Daily Email Reports</h4>
-            <p className="text-sm text-on-surface-variant">Send a summary of occupancy and revenue to the manager's email at midnight.</p>
+            <p className="text-sm text-on-surface-variant">Send a summary of occupancy to the manager's email at midnight.</p>
           </div>
           <div 
             onClick={() => setEmailReports(!emailReports)}

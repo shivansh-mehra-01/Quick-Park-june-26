@@ -11,7 +11,6 @@ export default function SettingsScreen() {
   const { theme, toggleTheme, colors } = useTheme();
   
   const [notifications, setNotifications] = useState(true);
-  const [locationTracking, setLocationTracking] = useState(true);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -26,7 +25,7 @@ export default function SettingsScreen() {
         <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
         <View style={{ width: 24 }} />
       </View>
-
+ 
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Preferences</Text>
         
@@ -37,14 +36,6 @@ export default function SettingsScreen() {
               <Text style={[styles.settingText, { color: colors.text }]}>Push Notifications</Text>
             </View>
             <Switch value={notifications} onValueChange={setNotifications} />
-          </View>
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-          <View style={styles.settingRow}>
-            <View style={styles.settingLeft}>
-              <Ionicons name="location-outline" size={24} color={colors.success} />
-              <Text style={[styles.settingText, { color: colors.text }]}>Location Services</Text>
-            </View>
-            <Switch value={locationTracking} onValueChange={setLocationTracking} />
           </View>
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <View style={styles.settingRow}>

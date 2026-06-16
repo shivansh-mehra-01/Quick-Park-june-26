@@ -31,7 +31,7 @@ export default function Bookings() {
   );
 
   const handleExport = () => {
-    window.open(`http://localhost:5000/bookings/export?start_date=${startDate}&end_date=${endDate}`, '_blank');
+    window.open(`${api.defaults.baseURL}/bookings/export?start_date=${startDate}&end_date=${endDate}`, '_blank');
   };
 
   return (

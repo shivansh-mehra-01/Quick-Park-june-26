@@ -146,7 +146,15 @@ export default function MapTab() {
             <Ionicons name="navigate-circle" size={40} color={colors.primary} />
             <View style={{ marginLeft: 15, flex: 1 }}>
               <Text style={{ fontSize: 24, fontWeight: 'bold', color: colors.text }}>
-                {Math.ceil(navDetails.duration / 60)} min
+                {(() => {
+                  const totalMinutes = Math.ceil(navDetails.duration / 60);
+                  if (totalMinutes >= 60) {
+                    const hrs = Math.floor(totalMinutes / 60);
+                    const mins = totalMinutes % 60;
+                    return mins > 0 ? `${hrs} hr ${mins} min` : `${hrs} hr`;
+                  }
+                  return `${totalMinutes} min`;
+                })()}
               </Text>
               <Text style={{ fontSize: 14, color: colors.textSecondary, fontWeight: '600' }}>
                 {(navDetails.distance / 1000).toFixed(1)} km • {selectedParking.name}

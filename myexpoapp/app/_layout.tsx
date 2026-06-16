@@ -1,7 +1,7 @@
 import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect, useState } from "react";
 import { authService } from "../services/authService";
-
+import { registerForPushNotificationsAsync } from "../utils/notificationHelper";
 import { ThemeProvider } from "../context/ThemeContext";
 
 function RootLayoutNav() {
@@ -20,6 +20,27 @@ function RootLayoutNav() {
     };
     checkAuth();
   }, [segments]);
+
+  // Register for push notifications when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      const registerNotifications = async () => {
+        try {
+          const token = await registerForPushNotificationsAsync();
+          if (token) {
+            const user = await authService.getCurrentUser();
+            if (user && user.id) {
+              await authService.updateProfile(user.id, { pushToken: token });
+              console.log("Push notifications token saved to profile:", token);
+            }
+          }
+        } catch (err) {
+          console.error("Failed to register push notifications:", err);
+        }
+      };
+      registerNotifications();
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (isAuthenticated === null || isChecking) return; // Still loading

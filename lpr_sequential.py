@@ -849,9 +849,9 @@ def update_vote_buffer(vote_buffers, session_key, text, conf, source, now):
 # ============================================================
 # ⚙️  Parking badlni ho toh neeche TARGET_PARKING_NAME change karo:
 
-TARGET_PARKING_NAME = "Aashima Mall Parking"
+TARGET_PARKING_NAME = "New Market Multi-Level Parking"
 # BASE_URL = "https://smart-parking-usm7.onrender.com/api"
-BASE_URL = "http://localhost:5000"
+BASE_URL = "https://quick-park-june-26.onrender.com"
 
 
 def init_db(base_url=BASE_URL, target_parking_name=TARGET_PARKING_NAME):

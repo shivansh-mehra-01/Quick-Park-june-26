@@ -3,7 +3,6 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import LiveOccupancy from './pages/LiveOccupancy';
 import Bookings from './pages/Bookings';
-import Pricing from './pages/Pricing';
 import Support from './pages/Support';
 import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';
@@ -29,7 +28,6 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="live" element={<LiveOccupancy />} />
           <Route path="bookings" element={<Bookings />} />
-          <Route path="pricing" element={<Pricing />} />
           <Route path="support" element={<Support />} />
           <Route path="notifications" element={<Notifications />} />
           <Route path="settings" element={<Settings />} />

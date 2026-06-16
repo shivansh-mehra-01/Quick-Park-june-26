@@ -4,3 +4,4 @@ numpy
 fast-alpr
 easyocr
 python-Levenshtein
+onnxruntime

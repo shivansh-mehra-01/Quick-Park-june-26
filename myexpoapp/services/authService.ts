@@ -103,7 +103,8 @@ export const authService = {
           email: email,
           full_name: updates.name,
           vehicles: updates.vehicles,
-          favorites: updates.favorites 
+          favorites: updates.favorites,
+          pushToken: updates.pushToken
         })
       });
 

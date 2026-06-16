@@ -40,7 +40,7 @@ router.get('/profile', async (req, res) => {
 router.post('/profile', async (req, res) => {
   try {
     const { usersCollection } = getCollections();
-    const { email, full_name, phone, vehicles, favorites } = req.body;
+    const { email, full_name, phone, vehicles, favorites, pushToken } = req.body;
 
     if (!email) return res.status(400).json({ error: 'Email is required' });
 
@@ -49,6 +49,7 @@ router.post('/profile', async (req, res) => {
     if (phone !== undefined) update_data.phone = phone;
     if (vehicles !== undefined) update_data.vehicles = vehicles;
     if (favorites !== undefined) update_data.favorites = favorites;
+    if (pushToken !== undefined) update_data.pushToken = pushToken;
 
     await usersCollection.updateOne(
       { email },

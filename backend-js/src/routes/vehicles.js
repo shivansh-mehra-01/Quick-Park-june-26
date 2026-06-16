@@ -1,6 +1,7 @@
 const express = require('express');
 const { ObjectId } = require('mongodb');
 const { getCollections } = require('../db');
+const { sendPushNotification } = require('../services/notificationService');
 
 const router = express.Router();
 
@@ -58,6 +59,16 @@ router.post(['/api/vehicle-entry', '/vehicle-entry', '/entry'], async (req, res)
       Total_Time: null,
     });
 
+    // Send push notification in background
+    const parkingName = parking?.name || 'Aashima Mall Parking';
+    sendPushNotification(
+      usersCollection,
+      plate,
+      '🚗 Parking Entry Scanned',
+      `Vehicle ${plate} has entered ${parkingName}. Welcome!`,
+      { event: 'entry', parkingName }
+    ).catch(err => console.error('Error triggering entry push notification:', err));
+
     // Decrement slot
     if (parking) {
       await parkingsCollection.updateOne({ _id: p_oid }, { $inc: { available_slots: -1 } });
@@ -108,6 +119,25 @@ router.post(['/api/vehicle-exit', '/vehicle-exit', '/exit'], async (req, res) =>
         },
       }
     );
+
+    // Send push notification in background
+    const totalMinutes = Math.floor(total_time_minutes);
+    let durationStr = `${totalMinutes} min`;
+    if (totalMinutes >= 60) {
+      const hrs = Math.floor(totalMinutes / 60);
+      const mins = totalMinutes % 60;
+      durationStr = mins > 0 ? `${hrs} hr ${mins} min` : `${hrs} hr`;
+    }
+    const priceHours = Math.ceil(total_time_minutes / 60);
+    const amount = Math.min(priceHours * 20, 100);
+
+    sendPushNotification(
+      usersCollection,
+      plate,
+      '💸 Parking Exit Completed',
+      `Vehicle ${plate} has exited ${record.Parking_Name || 'Parking'}. Total time: ${durationStr}. Charged ₹${amount}.`,
+      { event: 'exit', parkingName: record.Parking_Name }
+    ).catch(err => console.error('Error triggering exit push notification:', err));
 
     // Increment slot
     const target_oid = toObjectId(p_id);

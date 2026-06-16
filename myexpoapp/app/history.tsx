@@ -16,6 +16,24 @@ export default function HistoryScreen() {
     fetchUserHistoryApi().then(setHistory);
   }, []);
 
+  const formatDurationStr = (duration: string) => {
+    if (!duration) return "In Progress";
+    if (duration.toLowerCase() === "in progress") return "In Progress";
+    
+    // Match strings like "89 mins", "89 min", "89"
+    const match = duration.match(/^(\d+)\s*(mins|min|m)?$/i);
+    if (match) {
+      const totalMinutes = parseInt(match[1], 10);
+      if (totalMinutes >= 60) {
+        const hrs = Math.floor(totalMinutes / 60);
+        const mins = totalMinutes % 60;
+        return mins > 0 ? `${hrs} hr ${mins} min` : `${hrs} hr`;
+      }
+      return `${totalMinutes} min`;
+    }
+    return duration;
+  };
+
   const renderItem = ({ item }: { item: any }) => (
     <View style={[styles.card, { backgroundColor: colors.card }]}>
       <View style={styles.cardHeader}>
@@ -28,7 +46,7 @@ export default function HistoryScreen() {
         </View>
         <View style={styles.row}>
           <Ionicons name="time-outline" size={16} color={colors.textSecondary} />
-          <Text style={[styles.infoText, { color: colors.textSecondary }]}>{item.duration} ({item.date})</Text>
+          <Text style={[styles.infoText, { color: colors.textSecondary }]}>{formatDurationStr(item.duration)} ({item.date})</Text>
         </View>
       </View>
     </View>

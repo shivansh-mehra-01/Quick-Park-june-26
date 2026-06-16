@@ -72,21 +72,7 @@ export default function Layout() {
             }
           >
             <span className="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
-            <span className="text-sm Inter">Bookings</span>
-          </NavLink>
-
-          <NavLink
-            to="/pricing"
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-6 py-3 transition-colors ${
-                isActive
-                  ? 'text-blue-700 dark:text-blue-400 font-bold border-r-4 border-blue-700 dark:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'
-                  : 'text-slate-500 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 font-medium'
-              }`
-            }
-          >
-            <span className="material-symbols-outlined" data-icon="payments">payments</span>
-            <span className="text-sm Inter">Pricing</span>
+            <span className="text-sm Inter">Parking Logs</span>
           </NavLink>
           
           <NavLink
@@ -170,7 +156,7 @@ export default function Layout() {
         </NavLink>
         <NavLink to="/bookings" className={({ isActive }) => `flex flex-col items-center gap-1 ${isActive ? 'text-blue-700' : 'text-slate-500'}`}>
           <span className="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
-          <span className="text-[10px] font-bold">Bookings</span>
+          <span className="text-[10px] font-bold">Logs</span>
         </NavLink>
         <button onClick={() => window.location.reload()} className="flex flex-col items-center gap-1 text-red-500">
           <span className="material-symbols-outlined" data-icon="logout">logout</span>
